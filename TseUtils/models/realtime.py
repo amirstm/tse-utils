@@ -40,7 +40,7 @@ class ClientType():
     natural_sell_num: int = 0
     natural_sell_volume: int = 0
 
-    def trade_volume(self):
+    def trade_volume(self) -> int:
         return self.LegalBuyVolume + self.NaturalBuyVolume
 
 @dataclass

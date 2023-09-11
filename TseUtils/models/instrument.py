@@ -9,14 +9,14 @@ class InstrumentIdentification:
     """
 
     id: int = None
-    isec: str = None
+    isin: str = None
     tsetmc_code: str = None
     ticker: str = None
     fullname_persian: str = None
     fullname_english: str = None
 
     def __str__(self):
-        return f"{self.ticker} [{self.isec}]"
+        return f"{self.ticker} [{self.isin}]"
     
 class Instrument:
     """
@@ -40,16 +40,16 @@ class Instrument:
         self.client_type = ClientType()
         self.intraday_trade_candle = TradeCandle()
 
-    def ticker_with_tsetmc_hyperlink(self):
+    def ticker_with_tsetmc_hyperlink(self) -> str:
         """
         Returns an HTML element containing a hyperlink to the TSETMC page for instrument.
         """
         return f"<a href=\"http://www.tsetmc.com/Loader.aspx?ParTree=151311&i={self.identification.tsetmc_code}\">{self.identification.ticker}</a>"
 
-    def has_buy_queue(self):
+    def has_buy_queue(self) -> bool:
         return self.orderbook.rows[0].demand_price == self.max_price_threshold
 
-    def has_sell_queue(self):
+    def has_sell_queue(self) -> bool:
         return self.orderbook.rows[0].supply_price == self.min_price_threshold
 
     def __str__(self):
