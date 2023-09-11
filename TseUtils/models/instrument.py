@@ -12,8 +12,8 @@ class InstrumentIdentification:
     isin: str = None
     tsetmc_code: str = None
     ticker: str = None
-    fullname_persian: str = None
-    fullname_english: str = None
+    name_persian: str = None
+    name_english: str = None
 
     def __str__(self):
         return f"{self.ticker} [{self.isin}]"
