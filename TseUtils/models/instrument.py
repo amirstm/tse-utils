@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from enums import Nsc
+from TseUtils.models.enums import Nsc
+from TseUtils.models.realtime import *
 
 @dataclass
 class InstrumentIdentification:
@@ -21,7 +22,6 @@ class Instrument:
     """
     Holds all available data for a specific tradable instrument.
     """
-
     def __init__(self, identification: InstrumentIdentification, max_price_threshold: int = None, min_price_threshold: int = None, 
                  max_buy_order_quantity_threshold: int = None, max_sell_order_quantity_threshold: int = None, base_volume: int = 1, 
                  lot_size: int = 1, total_share_count: int = None, price_tick: int = 1, is_obsolete: bool = False, nsc: Nsc = None):
@@ -36,12 +36,21 @@ class Instrument:
         self.price_tick = price_tick
         self.is_obsolete = is_obsolete
         self.nsc = nsc
+        self.orderbook = OrderBook()
+        self.client_type = ClientType()
+        self.intraday_trade_candle = TradeCandle()
 
     def ticker_with_tsetmc_hyperlink(self):
         """
         Returns an HTML element containing a hyperlink to the TSETMC page for instrument.
         """
         return f"<a href=\"http://www.tsetmc.com/Loader.aspx?ParTree=151311&i={self.identification.tsetmc_code}\">{self.identification.ticker}</a>"
+
+    def has_buy_queue(self):
+        return self.orderbook.rows[0].demand_price == self.max_price_threshold
+
+    def has_sell_queue(self):
+        return self.orderbook.rows[0].supply_price == self.min_price_threshold
 
     def __str__(self):
         return str(self.identification)
