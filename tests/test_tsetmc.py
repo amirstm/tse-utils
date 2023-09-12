@@ -1,7 +1,7 @@
 import unittest, sys, asyncio
 sys.path.append("..")
-from TseUtils.tsetmc import TsetmcScraper
-from TseUtils.models import instrument
+from tse_utils.tsetmc import TsetmcScraper
+from tse_utils.models import instrument
 
 class TestTSETMC(unittest.IsolatedAsyncioTestCase):
 
@@ -72,6 +72,16 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_best_limits(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(len(data.rows) == 5)
+
+    async def test_get_closing_price_daily_list_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_closing_price_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue("closingPriceDaily" in data)
+
+    async def test_get_closing_price_daily_list(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_closing_price_daily_list(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue(len(data) > 1000)
 
 if __name__ == '__main__':
     unittest.main()

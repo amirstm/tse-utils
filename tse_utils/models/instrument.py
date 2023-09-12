@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from TseUtils.models.enums import Nsc
-from TseUtils.models.realtime import *
+from tse_utils.models.enums import Nsc
+from tse_utils.models.realtime import *
 
 @dataclass
 class InstrumentIdentification:

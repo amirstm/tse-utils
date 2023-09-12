@@ -1,5 +1,5 @@
 import asyncio, httpx, json
-from TseUtils.exceptions import MyProjectError
+from tse_utils.exceptions import MyProjectError
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -164,6 +164,23 @@ class BestLimits:
     def __init__(self, tsetmc_raw_data):
         self.rows = [BestLimitsRow(x) for x in tsetmc_raw_data]
 
+@dataclass
+class ClosingPriceDaily(ClosingPriceInfo):
+    def __init__(self, tsetmc_raw_data):
+        self.close_price = tsetmc_raw_data["pClosing"]
+        self.last_price = tsetmc_raw_data["pDrCotVal"]
+        self.open_price = tsetmc_raw_data["priceFirst"]
+        self.max_price = tsetmc_raw_data["priceMax"]
+        self.min_price = tsetmc_raw_data["priceMin"]
+        self.previous_price = tsetmc_raw_data["priceYesterday"]
+        self.trade_value = tsetmc_raw_data["qTotCap"]
+        self.trade_volume = tsetmc_raw_data["qTotTran5J"]
+        self.trade_num = tsetmc_raw_data["zTotTran"]
+        ltd_date = tsetmc_raw_data["dEven"]
+        ltd_time = tsetmc_raw_data["hEven"]
+        self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
+                                            hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -247,3 +264,12 @@ class TsetmcScraper():
         raw = await self.get_best_limits_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return BestLimits(tsetmc_raw_data=raw["bestLimits"])
 
+    async def get_closing_price_daily_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClosingPrice/GetClosingPriceDailyList/{tsetmc_code}/0", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_closing_price_daily_list(self, tsetmc_code: str, timeout: int = 3) -> list[ClosingPriceDaily]:
+        raw = await self.get_closing_price_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return [ClosingPriceDaily(tsetmc_raw_data=x) for x in raw["closingPriceDaily"]]
