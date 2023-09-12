@@ -140,6 +140,30 @@ class ClientType:
         self.natural_sell_num = tsetmc_raw_data["sell_CountI"]
         self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
 
+@dataclass
+class BestLimitsRow:
+    demand_num: int = None
+    demand_volume: int = None
+    demand_price: int = None
+    supply_num: int = None
+    supply_volume: int = None
+    supply_price: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.demand_num = tsetmc_raw_data["zOrdMeDem"]
+        self.demand_volume = tsetmc_raw_data["qTitMeDem"]
+        self.demand_price = tsetmc_raw_data["pMeDem"]
+        self.supply_num = tsetmc_raw_data["zOrdMeOf"]
+        self.supply_volume = tsetmc_raw_data["qTitMeOf"]
+        self.supply_price = tsetmc_raw_data["pMeOf"]
+
+@dataclass
+class BestLimits:
+    rows: list[BestLimitsRow] = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.rows = [BestLimitsRow(x) for x in tsetmc_raw_data]
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -213,4 +237,13 @@ class TsetmcScraper():
         raw = await self.get_client_type_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return ClientType(tsetmc_raw_data=raw["clientType"])
 
-        
+    async def get_best_limits_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/BestLimits/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_best_limits(self, tsetmc_code: str, timeout: int = 3) -> BestLimits:
+        raw = await self.get_best_limits_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return BestLimits(tsetmc_raw_data=raw["bestLimits"])
+

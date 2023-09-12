@@ -63,5 +63,15 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             data = await tsetmc.get_client_type(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(data.legal_sell_volume + data.natural_sell_volume == data.legal_buy_volume + data.natural_buy_volume)
 
+    async def test_get_best_limits_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_best_limits_raw(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue("bestLimits" in data)
+
+    async def test_get_best_limits(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_best_limits(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue(len(data.rows) == 5)
+
 if __name__ == '__main__':
     unittest.main()
