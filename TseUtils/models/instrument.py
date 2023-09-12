@@ -7,7 +7,6 @@ class InstrumentIdentification:
     """
     Holds the identification for instruments.
     """
-
     id: int = None
     isin: str = None
     tsetmc_code: str = None

@@ -80,6 +80,66 @@ class ClosingPriceInfo:
         self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
                                             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
 
+@dataclass
+class InstrumentInfo:
+    isin: str = None
+    name_persian: str = None
+    name_english: str = None
+    ticker: str = None
+    base_volume: int = None
+    liquid_percentage: float = None
+    max_price_weekly: int = None
+    min_price_weekly: int = None
+    max_price_annual: int = None
+    min_price_annual: int = None
+    average_trade_volume_monthly: int = None
+    total_share_count: int = None
+    market_code: int = None
+    market_title: str = None
+    max_price_threshold: int = None
+    min_price_threshold: int = None
+    type_id: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.isin = tsetmc_raw_data["instrumentID"]
+        self.name_english = tsetmc_raw_data["lVal18"]
+        self.name_persian = tsetmc_raw_data["lVal30"]
+        self.ticker = tsetmc_raw_data["lVal18AFC"]
+        self.market_title = tsetmc_raw_data["cgrValCotTitle"]
+        self.market_code = int(tsetmc_raw_data["cComVal"])
+        self.type_id = int(tsetmc_raw_data["yVal"])
+        self.base_volume = tsetmc_raw_data["baseVol"]
+        self.total_share_count = tsetmc_raw_data["zTitad"]
+        self.max_price_threshold = tsetmc_raw_data["staticThreshold"]["psGelStaMax"]
+        self.min_price_threshold = tsetmc_raw_data["staticThreshold"]["psGelStaMin"]
+        self.max_price_weekly = tsetmc_raw_data["maxWeek"]
+        self.min_price_weekly = tsetmc_raw_data["minWeek"]
+        self.max_price_annual = tsetmc_raw_data["maxYear"]
+        self.min_price_annual = tsetmc_raw_data["minYear"]
+        self.average_trade_volume_monthly = tsetmc_raw_data["qTotTran5JAvg"]
+        self.liquid_percentage = None if len(tsetmc_raw_data["kAjCapValCpsIdx"]) == 0 else float(tsetmc_raw_data["kAjCapValCpsIdx"])
+
+@dataclass
+class ClientType:
+    legal_buy_num: int = None
+    legal_buy_volume: int = None
+    legal_sell_num: int = None
+    legal_sell_volume: int = None
+    natural_buy_num: int = None
+    natural_buy_volume: int = None
+    natural_sell_num: int = None
+    natural_sell_volume: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.legal_buy_num = tsetmc_raw_data["buy_CountN"]
+        self.legal_buy_volume = tsetmc_raw_data["buy_N_Volume"]
+        self.legal_sell_num = tsetmc_raw_data["sell_CountN"]
+        self.legal_sell_volume = tsetmc_raw_data["sell_N_Volume"]
+        self.natural_buy_num = tsetmc_raw_data["buy_CountI"]
+        self.natural_buy_volume = tsetmc_raw_data["buy_I_Volume"]
+        self.natural_sell_num = tsetmc_raw_data["sell_CountI"]
+        self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -96,6 +156,12 @@ class TsetmcScraper():
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36",
             "accept": "application/json, text/plain, */*"
         }, base_url=f"http://{tsetmc_domain}/")
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.__client.aclose()
 
     async def get_instrument_identity_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Instrument/GetInstrumentIdentity/{tsetmc_code}", timeout=timeout)
@@ -127,8 +193,24 @@ class TsetmcScraper():
         raw = await self.get_closing_price_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return ClosingPriceInfo(tsetmc_raw_data=raw["closingPriceInfo"])
 
-    async def __aenter__(self):
-        return self
+    async def get_instrument_info_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Instrument/GetInstrumentInfo/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+        
+    async def get_instrument_info(self, tsetmc_code: str, timeout: int = 3) -> InstrumentInfo:
+        raw = await self.get_instrument_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return InstrumentInfo(tsetmc_raw_data=raw["instrumentInfo"])
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        await self.__client.aclose()
+    async def get_client_type_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClientType/GetClientType/{tsetmc_code}/1/0", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+        
+    async def get_client_type(self, tsetmc_code: str, timeout: int = 3) -> ClientType:
+        raw = await self.get_client_type_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return ClientType(tsetmc_raw_data=raw["clientType"])
+
+        
