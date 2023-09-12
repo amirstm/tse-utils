@@ -272,4 +272,4 @@ class TsetmcScraper():
 
     async def get_closing_price_daily_list(self, tsetmc_code: str, timeout: int = 3) -> list[ClosingPriceDaily]:
         raw = await self.get_closing_price_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
-        return [ClosingPriceDaily(tsetmc_raw_data=x) for x in raw["closingPriceDaily"]]
+        return [ClosingPriceDaily(tsetmc_raw_data=x) for x in raw["closingPriceDaily"]][::-1]

@@ -2,6 +2,7 @@ import unittest, sys, asyncio
 sys.path.append("..")
 from tse_utils.tsetmc import TsetmcScraper
 from tse_utils.models import instrument
+from datetime import datetime
 
 class TestTSETMC(unittest.IsolatedAsyncioTestCase):
 
@@ -82,6 +83,9 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_closing_price_daily_list(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(len(data) > 1000)
+            chosen_date = datetime(year=2023, month=9, day=11)
+            date_data = next(x for x in data if x.last_trade_datetime.date() == chosen_date.date())
+            self.assertTrue(date_data.trade_volume == 74309985)
 
 if __name__ == '__main__':
     unittest.main()
