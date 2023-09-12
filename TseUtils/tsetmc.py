@@ -1,36 +1,10 @@
 import asyncio, httpx, json
 from TseUtils.exceptions import MyProjectError
 from dataclasses import dataclass
-
-class TsetmcScraper():
-    """
-    This class fetches data from tsetmc.com, the official website for Tehran Stock Exchange market data.
-    """
-    def __init__(self, tsetmc_domain: str = "cdn.tsetmc.com"):
-        self.tsetmc_domain = tsetmc_domain
-        self.__client = httpx.AsyncClient(headers={
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36",
-            "accept": "application/json, text/plain, */*"
-        }, base_url=f"http://{tsetmc_domain}/")
-
-    async def get_instrument_identity_raw(self, tsetmc_code: str, timeout: int = 3):
-        r = await self.__client.get(f"api/Instrument/GetInstrumentIdentity/{tsetmc_code}", timeout=timeout)
-        if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
-        return json.loads(r.text)
-
-    async def get_instrument_identity(self, tsetmc_code: str, timeout: int = 3):
-        raw = await self.get_instrument_identity_raw(tsetmc_code=tsetmc_code, timeout=timeout)
-        return InstrumentIdentification(tsetmc_raw_data=raw["instrumentIdentity"])
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        await self.__client.aclose()
+from datetime import datetime
 
 @dataclass
-class InstrumentIdentification:
+class InstrumentIdentity:
     isin: str = None
     tsetmc_code: str = None
     ticker: str = None
@@ -59,9 +33,102 @@ class InstrumentIdentification:
 
     def __str__(self):
         return f"{self.ticker} [{self.isin}]"
+ 
+@dataclass
+class InstrumentSearchItem:
+    ticker: str = None
+    name_persian: str = None
+    tsetmc_code: str = None
+    is_active: bool = None
+    market_title: str = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.ticker = tsetmc_raw_data["lVal18AFC"]
+        self.name_persian = tsetmc_raw_data["lVal30"]
+        self.tsetmc_code = tsetmc_raw_data["insCode"]
+        self.market_title = tsetmc_raw_data["flowTitle"]
+        self.is_active = tsetmc_raw_data["lastDate"] != 0
+
+    def __str__(self):
+        return f"{self.ticker} <{self.tsetmc_code}>"
+
+@dataclass
+class ClosingPriceInfo:
+    last_trade_datetime: datetime = None
+    close_price: int = None
+    last_price: int = None
+    open_price: int = None
+    max_price: int = None
+    min_price: int = None
+    previous_price: int = None
+    trade_num: int = None
+    trade_value: int = None
+    trade_volume: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.close_price = tsetmc_raw_data["pClosing"]
+        self.last_price = tsetmc_raw_data["pDrCotVal"]
+        self.open_price = tsetmc_raw_data["priceFirst"]
+        self.max_price = tsetmc_raw_data["priceMax"]
+        self.min_price = tsetmc_raw_data["priceMin"]
+        self.previous_price = tsetmc_raw_data["priceYesterday"]
+        self.trade_value = tsetmc_raw_data["qTotCap"]
+        self.trade_volume = tsetmc_raw_data["qTotTran5J"]
+        self.trade_num = tsetmc_raw_data["zTotTran"]
+        ltd_date = tsetmc_raw_data["finalLastDate"]
+        ltd_time = tsetmc_raw_data["lastHEven"]
+        self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
+                                            hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
 
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
         super().__init__(*args)
         self.status_code = kwargs.get('status_code')
+        
+class TsetmcScraper():
+    """
+    This class fetches data from tsetmc.com, the official website for Tehran Stock Exchange market data.
+    """
+    def __init__(self, tsetmc_domain: str = "cdn.tsetmc.com"):
+        self.tsetmc_domain = tsetmc_domain
+        self.__client = httpx.AsyncClient(headers={
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36",
+            "accept": "application/json, text/plain, */*"
+        }, base_url=f"http://{tsetmc_domain}/")
+
+    async def get_instrument_identity_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Instrument/GetInstrumentIdentity/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_instrument_identity(self, tsetmc_code: str, timeout: int = 3) -> InstrumentIdentity:
+        raw = await self.get_instrument_identity_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return InstrumentIdentity(tsetmc_raw_data=raw["instrumentIdentity"])
+
+    async def get_instrument_search_raw(self, search_value: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Instrument/GetInstrumentSearch/{search_value}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_instrument_search(self, search_value: str, timeout: int = 3) -> list[InstrumentSearchItem]:
+        raw = await self.get_instrument_search_raw(search_value=search_value, timeout=timeout)
+        return [InstrumentSearchItem(x) for x in raw["instrumentSearch"]]
+
+    async def get_closing_price_info_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClosingPrice/GetClosingPriceInfo/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+    
+    async def get_closing_price_info(self, tsetmc_code: str, timeout: int = 3) -> ClosingPriceInfo:
+        raw = await self.get_closing_price_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return ClosingPriceInfo(tsetmc_raw_data=raw["closingPriceInfo"])
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.__client.aclose()
