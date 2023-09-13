@@ -1,5 +1,6 @@
 import asyncio, httpx, json
 from tse_utils.exceptions import MyProjectError
+from tse_utils.models.enums import *
 from dataclasses import dataclass
 from datetime import datetime, date
 
@@ -64,6 +65,7 @@ class ClosingPriceInfo:
     trade_num: int = None
     trade_value: int = None
     trade_volume: int = None
+    nsc: Nsc = None
 
     def __init__(self, tsetmc_raw_data):
         self.close_price = tsetmc_raw_data["pClosing"]
@@ -75,8 +77,9 @@ class ClosingPriceInfo:
         self.trade_value = tsetmc_raw_data["qTotCap"]
         self.trade_volume = tsetmc_raw_data["qTotTran5J"]
         self.trade_num = tsetmc_raw_data["zTotTran"]
+        self.nsc = Nsc[str(tsetmc_raw_data["instrumentState"]["cEtaval"]).replace(" ", "")]
         ltd_date = tsetmc_raw_data["finalLastDate"]
-        ltd_time = tsetmc_raw_data["lastHEven"]
+        ltd_time = tsetmc_raw_data["hEven"]
         self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
                                             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
 
