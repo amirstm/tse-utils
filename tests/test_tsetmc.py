@@ -52,7 +52,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_instrument_info(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(data.isin == self.sample_instrument.identification.isin)
-            self.assertTrue(data.total_share_count == 800000000000)
+            self.assertTrue(data.total_shares == 800000000000)
 
     async def test_get_client_type_raw(self):
         async with TsetmcScraper() as tsetmc:
@@ -119,6 +119,32 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_trade_intraday_list(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(len(data) != 0)
+
+    async def test_get_price_adjustment_list_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_price_adjustment_list_raw(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue("priceAdjust" in data)
+
+    async def test_get_price_adjustment_list(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_price_adjustment_list(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue(len(data) > 10)
+            self.assertTrue(any(x.record_date == date(year=2023, month=7, day=22) 
+                                and x.price_before == 5460 
+                                and x.price_after == 4960 for x in data))
+
+    async def test_get_instrument_share_change_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_instrument_share_change_raw(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue("instrumentShareChange" in data)
+
+    async def test_get_instrument_share_change(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_instrument_share_change(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue(len(data) > 5)
+            self.assertTrue(any(x.record_date == date(year=2022, month=8, day=9) 
+                                and x.total_shares_before == 293000000000 
+                                and x.total_shares_after == 530000000000 for x in data))
 
 if __name__ == '__main__':
     unittest.main()

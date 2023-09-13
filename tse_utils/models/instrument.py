@@ -23,7 +23,7 @@ class Instrument:
     """
     def __init__(self, identification: InstrumentIdentification, max_price_threshold: int = None, min_price_threshold: int = None, 
                  max_buy_order_quantity_threshold: int = None, max_sell_order_quantity_threshold: int = None, base_volume: int = 1, 
-                 lot_size: int = 1, total_share_count: int = None, price_tick: int = 1, is_obsolete: bool = False, nsc: Nsc = None):
+                 lot_size: int = 1, total_shares: int = None, price_tick: int = 1, is_obsolete: bool = False, nsc: Nsc = None):
         self.identification = identification
         self.max_price_threshold = max_price_threshold
         self.min_price_threshold = min_price_threshold
@@ -31,7 +31,7 @@ class Instrument:
         self.max_sell_order_quantity_threshold = max_sell_order_quantity_threshold
         self.base_volume = base_volume
         self.lot_size = lot_size
-        self.total_share_count = total_share_count
+        self.total_shares = total_shares
         self.price_tick = price_tick
         self.is_obsolete = is_obsolete
         self.nsc = nsc

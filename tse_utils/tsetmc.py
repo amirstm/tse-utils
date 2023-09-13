@@ -96,7 +96,7 @@ class InstrumentInfo:
     max_price_annual: int = None
     min_price_annual: int = None
     average_trade_volume_monthly: int = None
-    total_share_count: int = None
+    total_shares: int = None
     market_code: int = None
     market_title: str = None
     max_price_threshold: int = None
@@ -112,7 +112,7 @@ class InstrumentInfo:
         self.market_code = int(tsetmc_raw_data["cComVal"])
         self.type_id = int(tsetmc_raw_data["yVal"])
         self.base_volume = tsetmc_raw_data["baseVol"]
-        self.total_share_count = tsetmc_raw_data["zTitad"]
+        self.total_shares = tsetmc_raw_data["zTitad"]
         self.max_price_threshold = tsetmc_raw_data["staticThreshold"]["psGelStaMax"]
         self.min_price_threshold = tsetmc_raw_data["staticThreshold"]["psGelStaMin"]
         self.max_price_weekly = tsetmc_raw_data["maxWeek"]
@@ -223,6 +223,30 @@ class TradeIntraday():
         hEven = tsetmc_raw_data["hEven"]
         self.record_time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
         self.is_canceled = bool(tsetmc_raw_data["canceled"])
+
+@dataclass
+class PriceAdjustment:
+    record_date: date = None
+    price_before: int = None
+    price_after: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.price_before = tsetmc_raw_data["pClosingNotAdjusted"]
+        self.price_after = tsetmc_raw_data["pClosing"]
+        dEven = tsetmc_raw_data["dEven"]
+        self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+
+@dataclass
+class InstrumentShareChange:
+    record_date: date = None
+    total_shares_before: int = None
+    total_shares_after: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.total_shares_before = tsetmc_raw_data["numberOfShareOld"]
+        self.total_shares_after = tsetmc_raw_data["numberOfShareNew"]
+        dEven = tsetmc_raw_data["dEven"]
+        self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
 
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
@@ -337,3 +361,22 @@ class TsetmcScraper():
         raw = await self.get_trade_intraday_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [TradeIntraday(tsetmc_raw_data=x) for x in raw["trade"]]
 
+    async def get_price_adjustment_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClosingPrice/GetPriceAdjustList/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+        
+    async def get_price_adjustment_list(self, tsetmc_code: str, timeout: int = 3) -> list[PriceAdjustment]:
+        raw = await self.get_price_adjustment_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return [PriceAdjustment(tsetmc_raw_data=x) for x in raw["priceAdjust"]]
+
+    async def get_instrument_share_change_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Instrument/GetInstrumentShareChange/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+        
+    async def get_instrument_share_change(self, tsetmc_code: str, timeout: int = 3) -> list[InstrumentShareChange]:
+        raw = await self.get_instrument_share_change_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return [InstrumentShareChange(tsetmc_raw_data=x) for x in raw["instrumentShareChange"]]
