@@ -1,7 +1,7 @@
 import asyncio, httpx, json
 from tse_utils.exceptions import MyProjectError
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, date
 
 @dataclass
 class InstrumentIdentity:
@@ -181,6 +181,30 @@ class ClosingPriceDaily(ClosingPriceInfo):
         self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
                                             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
 
+@dataclass
+class ClientTypeDaily(ClientType):
+    legal_buy_value: int = None
+    legal_sell_value: int = None
+    natural_buy_value: int = None
+    natural_sell_value: int = None
+    record_date: date = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.legal_buy_num = tsetmc_raw_data["buy_N_Count"]
+        self.legal_buy_value = tsetmc_raw_data["buy_N_Value"]
+        self.legal_buy_volume = tsetmc_raw_data["buy_N_Volume"]
+        self.legal_sell_num = tsetmc_raw_data["sell_N_Count"]
+        self.legal_sell_value = tsetmc_raw_data["sell_N_Value"]
+        self.legal_sell_volume = tsetmc_raw_data["sell_N_Volume"]
+        self.natural_buy_num = tsetmc_raw_data["buy_I_Count"]
+        self.natural_buy_value = tsetmc_raw_data["buy_I_Value"]
+        self.natural_buy_volume = tsetmc_raw_data["buy_I_Volume"]
+        self.natural_sell_num = tsetmc_raw_data["sell_I_Count"]
+        self.natural_sell_value = tsetmc_raw_data["sell_I_Value"]
+        self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
+        rd_date = tsetmc_raw_data["recDate"]
+        self.record_date = date(year=rd_date // 10000, month=rd_date // 100 % 100, day=rd_date % 100)
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -273,3 +297,14 @@ class TsetmcScraper():
     async def get_closing_price_daily_list(self, tsetmc_code: str, timeout: int = 3) -> list[ClosingPriceDaily]:
         raw = await self.get_closing_price_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [ClosingPriceDaily(tsetmc_raw_data=x) for x in raw["closingPriceDaily"]][::-1]
+
+    async def get_client_type_history_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClientType/GetClientTypeHistory/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+        
+    async def get_client_type_history(self, tsetmc_code: str, timeout: int = 3) -> list[ClientTypeDaily]:
+        raw = await self.get_client_type_history_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return [ClientTypeDaily(tsetmc_raw_data=x) for x in raw["clientType"]][::-1]
+
