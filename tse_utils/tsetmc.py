@@ -248,6 +248,19 @@ class InstrumentShareChange:
         dEven = tsetmc_raw_data["dEven"]
         self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
 
+@dataclass
+class BestLimitsHistoryRow(BestLimitsRow):
+    row_number: int = None
+    record_time: time = None
+    reference_id: int = None
+
+    def __init__(self, tsetmc_raw_data, *args):
+        self.row_number = tsetmc_raw_data["number"]
+        self.reference_id = tsetmc_raw_data["refID"]
+        hEven = tsetmc_raw_data["hEven"]
+        self.record_time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
+        super(BestLimitsHistoryRow, self).__init__(tsetmc_raw_data=tsetmc_raw_data, *args)
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -380,3 +393,26 @@ class TsetmcScraper():
     async def get_instrument_share_change(self, tsetmc_code: str, timeout: int = 3) -> list[InstrumentShareChange]:
         raw = await self.get_instrument_share_change_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [InstrumentShareChange(tsetmc_raw_data=x) for x in raw["instrumentShareChange"]]
+
+    async def get_trade_intraday_hisory_list_raw(self, tsetmc_code: str, date: date, detailed: bool = True, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Trade/GetTradeHistory/{tsetmc_code}/{date.year}{date.month:02}{date.day:02}/{not detailed}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_trade_intraday_hisory_list(self, tsetmc_code: str, date: date, detailed: bool = True, timeout: int = 3) -> list[TradeIntraday]:
+        raw = await self.get_trade_intraday_hisory_list_raw(tsetmc_code=tsetmc_code, date=date, detailed=detailed, timeout=timeout)
+        proc = [TradeIntraday(tsetmc_raw_data=x) for x in raw["tradeHistory"]]
+        proc.sort(key=lambda x: x.index)
+        return proc
+
+    async def get_best_limits_intraday_history_list_raw(self, tsetmc_code: str, date: date, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/BestLimits/{tsetmc_code}/{date.year}{date.month:02}{date.day:02}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_best_limits_intraday_history_list(self, tsetmc_code: str, date: date, timeout: int = 3) -> list[BestLimitsHistoryRow]:
+        raw = await self.get_best_limits_intraday_history_list_raw(tsetmc_code=tsetmc_code, date=date, timeout=timeout)
+        return [BestLimitsHistoryRow(tsetmc_raw_data=x) for x in raw["bestLimitsHistory"]]
+

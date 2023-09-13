@@ -2,7 +2,7 @@ import unittest, sys, asyncio
 sys.path.append("..")
 from tse_utils.tsetmc import TsetmcScraper
 from tse_utils.models import instrument
-from datetime import datetime, date
+from datetime import datetime, date, time
 
 class TestTSETMC(unittest.IsolatedAsyncioTestCase):
 
@@ -10,6 +10,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         self.sample_instrument = instrument.Instrument(
             instrument.InstrumentIdentification(isin="IRO1FOLD0001", tsetmc_code="46348559193224090", 
                                                 ticker="فولاد"))
+        self.sample_date = date(year=2023, month=4, day=30)
         super().__init__(*args, **kwargs)
 
     async def test_get_instrument_identity_raw(self):
@@ -145,6 +146,36 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any(x.record_date == date(year=2022, month=8, day=9) 
                                 and x.total_shares_before == 293000000000 
                                 and x.total_shares_after == 530000000000 for x in data))
+
+    async def test_get_trade_intraday_hisory_list_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_trade_intraday_hisory_list_raw(
+                self.sample_instrument.identification.tsetmc_code, self.sample_date)
+            self.assertTrue("tradeHistory" in data)
+
+    async def test_get_trade_intraday_hisory_list(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_trade_intraday_hisory_list(
+                self.sample_instrument.identification.tsetmc_code, self.sample_date)
+            chosen_data = next(x for x in data if x.index == 15552)
+            self.assertTrue(chosen_data.volume == 100790 
+                            and chosen_data.price == 7250 
+                            and chosen_data.record_time == time(hour=12, minute=26, second=6)
+                            and chosen_data.is_canceled)
+
+    async def test_get_best_limits_intraday_history_list_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_best_limits_intraday_history_list_raw(
+                self.sample_instrument.identification.tsetmc_code, self.sample_date)
+            self.assertTrue("bestLimitsHistory" in data)
+
+    async def test_get_best_limits_intraday_history_list(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_best_limits_intraday_history_list(
+                self.sample_instrument.identification.tsetmc_code, self.sample_date)
+            self.assertTrue(any(x.record_time == time(hour=8, minute=45, second=36) and
+                                x.row_number == 5 and x.reference_id == 11679170214 and
+                                x.demand_volume == 163213 and x.demand_price == 7000 for x in data))
 
 if __name__ == '__main__':
     unittest.main()
