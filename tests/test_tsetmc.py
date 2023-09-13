@@ -89,12 +89,12 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_client_type_history_raw(self):
         async with TsetmcScraper() as tsetmc:
-            data = await tsetmc.get_client_type_history_raw(self.sample_instrument.identification.tsetmc_code)
+            data = await tsetmc.get_client_type_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue("clientType" in data)
 
     async def test_get_client_type_history(self):
         async with TsetmcScraper() as tsetmc:
-            data = await tsetmc.get_client_type_history(self.sample_instrument.identification.tsetmc_code)
+            data = await tsetmc.get_client_type_daily_list(self.sample_instrument.identification.tsetmc_code)
             chosen_date = date(year=2023, month=9, day=11)
             date_data = next(x for x in data if x.record_date == chosen_date)
             self.assertTrue(date_data.legal_buy_num == 13)
@@ -109,6 +109,16 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(date_data.natural_sell_num == 1242)
             self.assertTrue(date_data.natural_sell_value == 219633070590)
             self.assertTrue(date_data.natural_sell_volume == 39582770)
+
+    async def test_get_trade_intraday_list_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_trade_intraday_list_raw(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue("trade" in data)
+
+    async def test_get_trade_intraday_list(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_trade_intraday_list(self.sample_instrument.identification.tsetmc_code)
+            self.assertTrue(len(data) != 0)
 
 if __name__ == '__main__':
     unittest.main()

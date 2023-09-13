@@ -2,7 +2,7 @@ import asyncio, httpx, json
 from tse_utils.exceptions import MyProjectError
 from tse_utils.models.enums import *
 from dataclasses import dataclass
-from datetime import datetime, date
+from datetime import datetime, date, time
 
 @dataclass
 class InstrumentIdentity:
@@ -208,6 +208,22 @@ class ClientTypeDaily(ClientType):
         rd_date = tsetmc_raw_data["recDate"]
         self.record_date = date(year=rd_date // 10000, month=rd_date // 100 % 100, day=rd_date % 100)
 
+@dataclass
+class TradeIntraday():
+    price: int = None
+    volume: int = None
+    index: int = None
+    record_time: time = None
+    is_canceled: bool = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.price = tsetmc_raw_data["pTran"]
+        self.volume = tsetmc_raw_data["qTitTran"]
+        self.index = tsetmc_raw_data["nTran"]
+        hEven = tsetmc_raw_data["hEven"]
+        self.record_time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
+        self.is_canceled = bool(tsetmc_raw_data["canceled"])
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -301,13 +317,23 @@ class TsetmcScraper():
         raw = await self.get_closing_price_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [ClosingPriceDaily(tsetmc_raw_data=x) for x in raw["closingPriceDaily"]][::-1]
 
-    async def get_client_type_history_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+    async def get_client_type_daily_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClientType/GetClientTypeHistory/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
             raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
         
-    async def get_client_type_history(self, tsetmc_code: str, timeout: int = 3) -> list[ClientTypeDaily]:
-        raw = await self.get_client_type_history_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+    async def get_client_type_daily_list(self, tsetmc_code: str, timeout: int = 3) -> list[ClientTypeDaily]:
+        raw = await self.get_client_type_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [ClientTypeDaily(tsetmc_raw_data=x) for x in raw["clientType"]][::-1]
+
+    async def get_trade_intraday_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Trade/GetTrade/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+    
+    async def get_trade_intraday_list(self, tsetmc_code: str, timeout: int = 3) -> list[TradeIntraday]:
+        raw = await self.get_trade_intraday_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return [TradeIntraday(tsetmc_raw_data=x) for x in raw["trade"]]
 
