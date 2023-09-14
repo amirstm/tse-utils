@@ -11,6 +11,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             instrument.InstrumentIdentification(isin="IRO1FOLD0001", tsetmc_code="46348559193224090", 
                                                 ticker="فولاد"))
         self.sample_date = date(year=2023, month=4, day=30)
+        self.sample_index_identification = instrument.IndexIdentification(persian_name="شاخص کل", tsetmc_code="32097828799138957")
         super().__init__(*args, **kwargs)
 
     async def test_get_instrument_identity_raw(self):
@@ -176,6 +177,18 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any(x.record_time == time(hour=8, minute=45, second=36) and
                                 x.row_number == 5 and x.reference_id == 11679170214 and
                                 x.demand_volume == 163213 and x.demand_price == 7000 for x in data))
+
+    async def test_get_index_history_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_index_history_raw(self.sample_index_identification.tsetmc_code)
+            self.assertTrue("indexB2" in data)
+
+    async def test_get_index_history(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_index_history(self.sample_index_identification.tsetmc_code)
+            self.assertTrue(any(x.record_date == date(year=2023, month=9, day=13) and
+                                x.last_value == 2126741.7 and x.min_value == 2126690 and
+                                x.max_value == 2130510 for x in data))
 
 if __name__ == '__main__':
     unittest.main()

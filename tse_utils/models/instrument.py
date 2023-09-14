@@ -53,3 +53,14 @@ class Instrument:
 
     def __str__(self):
         return str(self.identification)
+
+@dataclass
+class IndexIdentification:
+    """
+    Holds the identification for an index, for example the overal index.
+    """
+    tsetmc_code: str = None
+    persian_name:str = None
+
+    def __str__(self):
+        return f"{self.persian_name} [{self.tsetmc_code}]"

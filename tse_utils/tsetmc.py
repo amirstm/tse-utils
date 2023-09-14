@@ -261,6 +261,20 @@ class BestLimitsHistoryRow(BestLimitsRow):
         self.record_time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
         super(BestLimitsHistoryRow, self).__init__(tsetmc_raw_data=tsetmc_raw_data, *args)
 
+@dataclass
+class IndexDaily:
+    record_date: date = None
+    min_value: float = None
+    max_value: float = None
+    last_value: float = None 
+
+    def __init__(self, tsetmc_raw_data):
+        self.min_value = tsetmc_raw_data["xNivInuPbMresIbs"]
+        self.max_value = tsetmc_raw_data["xNivInuPhMresIbs"]
+        self.last_value = tsetmc_raw_data["xNivInuClMresIbs"]
+        dEven = tsetmc_raw_data["dEven"]
+        self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -415,4 +429,14 @@ class TsetmcScraper():
     async def get_best_limits_intraday_history_list(self, tsetmc_code: str, date: date, timeout: int = 3) -> list[BestLimitsHistoryRow]:
         raw = await self.get_best_limits_intraday_history_list_raw(tsetmc_code=tsetmc_code, date=date, timeout=timeout)
         return [BestLimitsHistoryRow(tsetmc_raw_data=x) for x in raw["bestLimitsHistory"]]
+
+    async def get_index_history_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Index/GetIndexB2History/{tsetmc_code}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_index_history(self, tsetmc_code: str, timeout: int = 3) -> list[IndexDaily]:
+        raw = await self.get_index_history_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        return [IndexDaily(tsetmc_raw_data=x) for x in raw["indexB2"]]
 
