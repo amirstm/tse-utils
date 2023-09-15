@@ -12,6 +12,12 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                                                 ticker="فولاد"))
         self.sample_date = date(year=2023, month=4, day=30)
         self.sample_index_identification = instrument.IndexIdentification(persian_name="شاخص کل", tsetmc_code="32097828799138957")
+        self.sample_option = instrument.OptionInstrument(exercise_date=date(year=2023, month=10, day=18), exercise_price=1653, 
+                                                         underlying=self.sample_instrument, 
+                                                         identification=instrument.InstrumentIdentification(
+                                                             isin="IRO9FOLD6821",
+                                                             ticker="ضفلا7020",
+                                                             tsetmc_code="37762443198265540"))
         super().__init__(*args, **kwargs)
 
     async def test_get_instrument_identity_raw(self):

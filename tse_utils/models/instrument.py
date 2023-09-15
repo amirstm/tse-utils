@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from tse_utils.models.enums import Nsc
 from tse_utils.models.realtime import *
+from datetime import time, date, datetime
 
 @dataclass
 class InstrumentIdentification:
@@ -53,6 +54,22 @@ class Instrument:
 
     def __str__(self):
         return str(self.identification)
+
+class DerivativeInstrument(Instrument):
+    '''
+    Derivative instrument contains a self.underlying that represents the underlying instrument.
+    '''
+    def __init__(self, underlying: Instrument, identification: InstrumentIdentification, **kwargs):
+        self.underlying = underlying
+        super().__init__(identification=identification, **kwargs)
+
+class OptionInstrument(DerivativeInstrument):
+
+    def __init__(self, exercise_date: date, exercise_price: int, underlying: Instrument, 
+                 identification: InstrumentIdentification, **kwargs):
+        self.exercise_date = exercise_date
+        self.exercise_price = exercise_price
+        super().__init__(underlying=underlying, identification=identification, **kwargs)
 
 @dataclass
 class IndexIdentification:
