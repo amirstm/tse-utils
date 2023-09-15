@@ -196,5 +196,17 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                                 x.last_value == 2126741.7 and x.min_value == 2126690 and
                                 x.max_value == 2130510 for x in data))
 
+    async def test_get_instrument_option_info_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_instrument_option_info_raw(self.sample_option.identification.isin)
+            self.assertTrue("instrumentOption" in data)
+
+    async def test_get_instrument_option_info(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_instrument_option_info(self.sample_option.identification.isin)
+            self.assertTrue(data.exercise_date == self.sample_option.exercise_date and
+                            data.exercise_price == self.sample_option.exercise_price and
+                            data.underlying_tsetmc_code == self.sample_instrument.identification.tsetmc_code)
+
 if __name__ == '__main__':
     unittest.main()

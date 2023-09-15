@@ -275,6 +275,33 @@ class IndexDaily:
         dEven = tsetmc_raw_data["dEven"]
         self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
 
+@dataclass
+class InstrumentOptionInfo:
+    tsetmc_code: str = None
+    open_positions: int = None
+    exercise_price: int = None
+    exercise_date: date = None
+    lot_size: int = None
+    begin_date: date = None
+    a_factor: float = None
+    b_factor: float = None
+    c_factor: float = None
+    underlying_tsetmc_code: str = None
+    
+    def __init__(self, tsetmc_raw_data):
+        self.tsetmc_code = tsetmc_raw_data["insCode"]
+        self.open_positions = tsetmc_raw_data["buyOP"]
+        self.exercise_price = tsetmc_raw_data["strikePrice"]
+        endDate = tsetmc_raw_data["endDate"]
+        self.exercise_date = date(year=endDate // 10000, month=endDate // 100 % 100, day=endDate % 100)
+        beginDate = tsetmc_raw_data["beginDate"]
+        self.begin_date = date(year=beginDate // 10000, month=beginDate // 100 % 100, day=beginDate % 100)
+        self.lot_size = tsetmc_raw_data["contractSize"]
+        self.a_factor = tsetmc_raw_data["aFactor"]
+        self.b_factor = tsetmc_raw_data["bFactor"]
+        self.c_factor = tsetmc_raw_data["cFactor"]
+        self.underlying_tsetmc_code = tsetmc_raw_data["uaInsCode"]
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -439,4 +466,14 @@ class TsetmcScraper():
     async def get_index_history(self, tsetmc_code: str, timeout: int = 3) -> list[IndexDaily]:
         raw = await self.get_index_history_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [IndexDaily(tsetmc_raw_data=x) for x in raw["indexB2"]]
+
+    async def get_instrument_option_info_raw(self, isin: str, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/Instrument/GetInstrumentOptionByInstrumentID/{isin}", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_instrument_option_info(self, isin: str, timeout: int = 3) -> InstrumentOptionInfo:
+        raw = await self.get_instrument_option_info_raw(isin=isin, timeout=timeout)
+        return InstrumentOptionInfo(tsetmc_raw_data=raw["instrumentOption"])
 

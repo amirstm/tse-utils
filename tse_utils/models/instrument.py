@@ -59,17 +59,17 @@ class DerivativeInstrument(Instrument):
     '''
     Derivative instrument contains a self.underlying that represents the underlying instrument.
     '''
-    def __init__(self, underlying: Instrument, identification: InstrumentIdentification, **kwargs):
+    def __init__(self, underlying: Instrument, **kwargs):
         self.underlying = underlying
-        super().__init__(identification=identification, **kwargs)
+        super().__init__(**kwargs)
 
 class OptionInstrument(DerivativeInstrument):
 
-    def __init__(self, exercise_date: date, exercise_price: int, underlying: Instrument, 
-                 identification: InstrumentIdentification, **kwargs):
+    def __init__(self, exercise_date: date, exercise_price: int, lot_size: int = None, **kwargs):
         self.exercise_date = exercise_date
         self.exercise_price = exercise_price
-        super().__init__(underlying=underlying, identification=identification, **kwargs)
+        self.lot_size = lot_size
+        super().__init__(**kwargs)
 
 @dataclass
 class IndexIdentification:
