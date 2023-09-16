@@ -302,6 +302,40 @@ class InstrumentOptionInfo:
         self.c_factor = tsetmc_raw_data["cFactor"]
         self.underlying_tsetmc_code = tsetmc_raw_data["uaInsCode"]
 
+@dataclass
+class PrimaryMarketOverview:
+    '''
+    Contains data for the main (Bourse) market.
+    '''
+    def __init__(self, tsetmc_raw_data):
+        self.index_change = tsetmc_raw_data["indexChange"]
+        self.index_equal_weighted_change = tsetmc_raw_data["indexEqualWeightedChange"]
+        self.index_equal_weighted_last_value = tsetmc_raw_data["indexEqualWeightedLastValue"]
+        self.index_last_value = tsetmc_raw_data["indexLastValue"]
+        marketActivityDEven = tsetmc_raw_data["marketActivityDEven"]
+        marketActivityHEven = tsetmc_raw_data["marketActivityHEven"]
+        self.record_datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
+                                        day=marketActivityDEven % 100, hour=marketActivityHEven // 10000, 
+                                        minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
+        self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
+        self.trade_volume = tsetmc_raw_data["marketActivityQTotTran"]
+        self.trade_num = tsetmc_raw_data["marketActivityZTotTran"]
+        self.market_state = tsetmc_raw_data["marketState"]
+        self.market_state_title = tsetmc_raw_data["marketStateTitle"]
+        self.market_value = tsetmc_raw_data["marketValue"]
+
+    index_last_value: int = None
+    index_change: int = None
+    index_equal_weighted_last_value: int = None
+    index_equal_weighted_change: int = None
+    record_datetime: datetime = None
+    trade_value: int = None
+    trade_volume: int = None
+    trade_num: int = None
+    market_state: str = None
+    market_state_title: str = None
+    market_value: int = None
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -476,4 +510,15 @@ class TsetmcScraper():
     async def get_instrument_option_info(self, isin: str, timeout: int = 3) -> InstrumentOptionInfo:
         raw = await self.get_instrument_option_info_raw(isin=isin, timeout=timeout)
         return InstrumentOptionInfo(tsetmc_raw_data=raw["instrumentOption"])
+
+    async def get_primary_market_overview_raw(self, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/MarketData/GetMarketOverview/1", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_primary_market_overview(self, timeout: int = 3) -> PrimaryMarketOverview:
+        raw = await self.get_primary_market_overview_raw(timeout=timeout)
+        return PrimaryMarketOverview(tsetmc_raw_data=raw["marketOverview"])
+
 
