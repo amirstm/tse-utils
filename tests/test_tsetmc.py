@@ -216,10 +216,20 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
     async def test_get_primary_market_overview(self):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_primary_market_overview()
-            self.assertTrue(data.market_value > 1e10)
+            self.assertTrue(data.market_value > 4e16)
             self.assertTrue(data.index_last_value > 1e6)
             
+    async def test_get_secondary_market_overview_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_secondary_market_overview_raw()
+            self.assertTrue("marketOverview" in data)
 
+    async def test_get_secondary_market_overview(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_secondary_market_overview()
+            self.assertTrue(data.market_value > 1e16)
+            self.assertTrue(data.index_last_value > 1e4)
+            self.assertTrue(data.tertiary_market_value > 1e15)
 
 if __name__ == '__main__':
     unittest.main()
