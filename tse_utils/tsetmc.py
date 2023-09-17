@@ -373,7 +373,7 @@ class TsetmcScrapeError(MyProjectError):
    def __init__(self, *args, **kwargs):
         super().__init__(*args)
         self.status_code = kwargs.get('status_code')
-        
+
 class TsetmcScraper():
     """
     This class fetches data from tsetmc.com, the official website for Tehran Stock Exchange market data.
@@ -563,4 +563,15 @@ class TsetmcScraper():
         raw = await self.get_secondary_market_overview_raw(timeout=timeout)
         return SecondaryMarketOverview(tsetmc_raw_data=raw["marketOverview"])
 
+class TsetmcClientScraper():
+    """
+    This class fetches data from tsetmc client.
+    """
+    base_address: str = "http://service.tsetmc.com/WebService/TseClient.asmx"
 
+    def __init__(self):
+        self.__client = httpx.AsyncClient(headers={
+            "Host": "service.tsetmc.com",
+            "SOAPAction": "http://tsetmc.com/Instrument",
+            "accept": "text/xml"
+        }, base_url=TsetmcClientScraper.base_address)
