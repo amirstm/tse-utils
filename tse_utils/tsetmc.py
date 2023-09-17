@@ -3,6 +3,7 @@ from tse_utils.exceptions import MyProjectError
 from tse_utils.models.enums import *
 from dataclasses import dataclass
 from datetime import datetime, date, time
+from bs4 import BeautifulSoup
 
 @dataclass
 class InstrumentIdentity:
@@ -442,6 +443,23 @@ class MarketWatchClientTypeData(ClientType):
         self.tsetmc_code = tsetmc_raw_data["insCode"]
         super().__init__(tsetmc_raw_data)
 
+@dataclass
+class TseClientInstrumentIdentity(InstrumentIdentity):
+    last_change_date: date = None
+
+    def __init__(self, tseclient_raw_data):
+        self.tsetmc_code = tseclient_raw_data[0]
+        self.isin = tseclient_raw_data[1]
+        self.name_english = tseclient_raw_data[3]
+        self.ticker = tseclient_raw_data[5]
+        self.name_persian = tseclient_raw_data[6]
+        self.type_id = int(tseclient_raw_data[17])
+        self.sector_code = tseclient_raw_data[15]
+        self.sub_sector_code = tseclient_raw_data[16]
+        self.market_code = int(tseclient_raw_data[9])
+        last_change_date_raw = int(tseclient_raw_data[8])
+        self.last_change_date = date(year=last_change_date_raw//10000, month=last_change_date_raw//100%100, day=last_change_date_raw%100)
+        
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -657,7 +675,7 @@ class TsetmcScraper():
         raw = await self.get_client_type_all_raw(timeout=timeout)
         return [MarketWatchClientTypeData(tsetmc_raw_data=x) for x in raw["clientTypeAllDto"]]
 
-class TsetmcClientScraper():
+class TseClientScraper():
     """
     This class fetches data from tsetmc client.
     """
@@ -667,5 +685,25 @@ class TsetmcClientScraper():
         self.__client = httpx.AsyncClient(headers={
             "Host": "service.tsetmc.com",
             "SOAPAction": "http://tsetmc.com/Instrument",
-            "accept": "text/xml"
-        }, base_url=TsetmcClientScraper.base_address)
+            "accept": "text/xml",
+            "Content-type":"text/xml" 
+        }, base_url=TseClientScraper.base_address)
+
+    async def __aenter__(self):
+        return self
+    
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.__client.aclose()
+        
+    async def get_instruments_list_raw(self, timeout: int = 3) -> str:
+        xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n <soap:Body>\r\n <Instrument xmlns=\"http://tsetmc.com/\">\r\n <UserName>string</UserName>\r\n <Password>string</Password>\r\n <Flow>unsignedByte</Flow>\r\n </Instrument>\r\n </soap:Body>\r\n</soap:Envelope>"
+        http_content = xmlString.encode(encoding = 'UTF-8')
+        r = await self.__client.post(self.base_address, content=http_content, timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return r.content
+    
+    async def get_instruments_list(self, timeout: int = 3) -> list[TseClientInstrumentIdentity]:
+        raw = await self.get_instruments_list_raw(timeout=timeout)
+        element = BeautifulSoup(raw, features="xml").findChild("InstrumentResult").text
+        return [TseClientInstrumentIdentity(x.split(",")) for x in element.split(";")]
