@@ -231,5 +231,15 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(data.index_last_value > 1e4)
             self.assertTrue(data.tertiary_market_value > 1e15)
 
+    async def test_get_market_watch_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_market_watch_raw()
+            self.assertTrue("marketwatch" in data)
+
+    async def test_get_market_watch(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_market_watch()
+            self.assertTrue(len(data) > 100)
+
 if __name__ == '__main__':
     unittest.main()

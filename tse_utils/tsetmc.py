@@ -368,6 +368,70 @@ class SecondaryMarketOverview:
         self.market_value = tsetmc_raw_data["marketValue"]
         self.tertiary_market_value = tsetmc_raw_data["marketValueBase"]
 
+@dataclass
+class MarketWatchBestLimitsRow(BestLimitsRow):
+    id: int = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.demand_num = tsetmc_raw_data["zmd"]
+        self.demand_volume = tsetmc_raw_data["qmd"]
+        self.demand_price = tsetmc_raw_data["pmd"]
+        self.supply_num = tsetmc_raw_data["zmo"]
+        self.supply_volume = tsetmc_raw_data["qmo"]
+        self.supply_price = tsetmc_raw_data["pmo"]
+        self.id = tsetmc_raw_data["rid"]
+
+@dataclass 
+class MarketWatchBestLimits:
+    rows: list[MarketWatchBestLimitsRow] = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.rows = [MarketWatchBestLimitsRow(x) for x in tsetmc_raw_data]
+
+@dataclass
+class MarketWatchTradeData():
+    isin: str = None
+    tsetmc_code: str = None
+    ticker: str = None
+    name_persian: str = None
+    last_trade_time: time = None
+    close_price: int = None
+    last_price: int = None
+    open_price: int = None
+    max_price: int = None
+    min_price: int = None
+    previous_price: int = None
+    max_price_threshold: int = None
+    min_price_threshold: int = None
+    trade_num: int = None
+    trade_value: int = None
+    trade_volume: int = None
+    eps: int = None
+    total_shares: int = None
+    best_limits: MarketWatchBestLimits = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.tsetmc_code = tsetmc_raw_data["insCode"]
+        self.ticker = tsetmc_raw_data["lva"]
+        self.isin = tsetmc_raw_data["insID"]
+        self.name_persian = tsetmc_raw_data["lvc"]
+        self.total_shares = tsetmc_raw_data["ztd"]
+        self.eps = tsetmc_raw_data["eps"]
+        self.previous_price = tsetmc_raw_data["py"]
+        self.last_price = tsetmc_raw_data["pdv"]
+        self.open_price = tsetmc_raw_data["pf"]
+        self.close_price = tsetmc_raw_data["pcl"]
+        self.max_price_threshold = tsetmc_raw_data["pMax"]
+        self.min_price_threshold = tsetmc_raw_data["pMin"]
+        self.max_price = tsetmc_raw_data["pmx"]
+        self.min_price = tsetmc_raw_data["pmn"]
+        self.trade_value = tsetmc_raw_data["qtc"]
+        self.trade_volume = tsetmc_raw_data["qtj"]
+        self.trade_num = tsetmc_raw_data["ztt"]
+        hEven = tsetmc_raw_data["hEven"]
+        self.last_trade_time = time(hour=hEven//10000, minute=hEven//100%100, second=hEven%100)
+        self.best_limits = MarketWatchBestLimits(tsetmc_raw_data=tsetmc_raw_data["blDs"])
+
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
    def __init__(self, *args, **kwargs):
@@ -562,6 +626,16 @@ class TsetmcScraper():
     async def get_secondary_market_overview(self, timeout: int = 3) -> SecondaryMarketOverview:
         raw = await self.get_secondary_market_overview_raw(timeout=timeout)
         return SecondaryMarketOverview(tsetmc_raw_data=raw["marketOverview"])
+
+    async def get_market_watch_raw(self, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClosingPrice/GetMarketWatch?market=0&paperTypes[0]=1&paperTypes[1]=2&paperTypes[2]=3&paperTypes[3]=4&paperTypes[4]=5&paperTypes[5]=6&paperTypes[6]=7&paperTypes[7]=8&paperTypes[8]=9&showTraded=false&withBestLimits=true&hEven=0&RefID=0", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+
+    async def get_market_watch(self, timeout: int = 3) -> list[MarketWatchTradeData]:
+        raw = await self.get_market_watch_raw(timeout=timeout)
+        return [MarketWatchTradeData(tsetmc_raw_data=x) for x in raw["marketwatch"]]
 
 class TsetmcClientScraper():
     """
