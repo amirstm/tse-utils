@@ -1,6 +1,6 @@
 import unittest, sys, asyncio
 sys.path.append("..")
-from tse_utils.tsetmc import TsetmcScraper
+from tse_utils.tsetmc import TsetmcScraper, TseClientScraper
 from tse_utils.models import instrument
 from datetime import datetime, date, time
 
@@ -251,6 +251,18 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             data = await tsetmc.get_client_type_all()
             self.assertTrue(len(data) > 100)
             self.assertFalse(any(x.legal_buy_volume + x.natural_buy_volume != x.legal_sell_volume + x.natural_sell_volume for x in data))
+
+    async def test_tse_client_get_instruments_list_raw(self):
+        async with TseClientScraper() as tse_client:
+            data = await tse_client.get_instruments_list_raw()
+            self.assertTrue("InstrumentResult" in data)
+
+    async def test_tse_client_get_instruments_list(self):
+        async with TseClientScraper() as tse_client:
+            instrument, _ = await tse_client.get_instruments_list()
+            self.assertTrue(len(instrument) > 0)
+            self.assertTrue(any(x.tsetmc_code == self.sample_instrument.identification.tsetmc_code and
+                                x.isin == self.sample_instrument.identification.isin for x in instrument))
 
 if __name__ == '__main__':
     unittest.main()
