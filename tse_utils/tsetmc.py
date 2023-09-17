@@ -408,6 +408,7 @@ class MarketWatchTradeData():
     trade_volume: int = None
     eps: int = None
     total_shares: int = None
+    base_volume: int = None
     best_limits: MarketWatchBestLimits = None
 
     def __init__(self, tsetmc_raw_data):
@@ -428,9 +429,18 @@ class MarketWatchTradeData():
         self.trade_value = tsetmc_raw_data["qtc"]
         self.trade_volume = tsetmc_raw_data["qtj"]
         self.trade_num = tsetmc_raw_data["ztt"]
+        self.base_volume = tsetmc_raw_data["bv"]
         hEven = tsetmc_raw_data["hEven"]
         self.last_trade_time = time(hour=hEven//10000, minute=hEven//100%100, second=hEven%100)
         self.best_limits = MarketWatchBestLimits(tsetmc_raw_data=tsetmc_raw_data["blDs"])
+
+@dataclass
+class MarketWatchClientTypeData(ClientType):
+    tsetmc_code: str = None
+
+    def __init__(self, tsetmc_raw_data):
+        self.tsetmc_code = tsetmc_raw_data["insCode"]
+        super().__init__(tsetmc_raw_data)
 
 class TsetmcScrapeError(MyProjectError):
    """Tsetmc bad response status error."""
@@ -636,6 +646,16 @@ class TsetmcScraper():
     async def get_market_watch(self, timeout: int = 3) -> list[MarketWatchTradeData]:
         raw = await self.get_market_watch_raw(timeout=timeout)
         return [MarketWatchTradeData(tsetmc_raw_data=x) for x in raw["marketwatch"]]
+
+    async def get_client_type_all_raw(self, timeout: int = 3) -> dict:
+        r = await self.__client.get(f"api/ClientType/GetClientTypeAll", timeout=timeout)
+        if r.status_code != 200:
+            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+        return json.loads(r.text)
+    
+    async def get_client_type_all(self, timeout: int = 3) -> list[MarketWatchClientTypeData]:
+        raw = await self.get_client_type_all_raw(timeout=timeout)
+        return [MarketWatchClientTypeData(tsetmc_raw_data=x) for x in raw["clientTypeAllDto"]]
 
 class TsetmcClientScraper():
     """

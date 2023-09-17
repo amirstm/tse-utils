@@ -241,5 +241,16 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             data = await tsetmc.get_market_watch()
             self.assertTrue(len(data) > 100)
 
+    async def test_get_client_type_all_raw(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_client_type_all_raw()
+            self.assertTrue("clientTypeAllDto" in data)
+
+    async def test_get_client_type_all(self):
+        async with TsetmcScraper() as tsetmc:
+            data = await tsetmc.get_client_type_all()
+            self.assertTrue(len(data) > 100)
+            self.assertFalse(any(x.legal_buy_volume + x.natural_buy_volume != x.legal_sell_volume + x.natural_sell_volume for x in data))
+
 if __name__ == '__main__':
     unittest.main()
