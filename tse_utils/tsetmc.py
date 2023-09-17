@@ -1,17 +1,13 @@
 import asyncio, httpx, json
 from tse_utils.exceptions import MyProjectError
 from tse_utils.models.enums import *
+from tse_utils.models import realtime, instrument
 from dataclasses import dataclass
 from datetime import datetime, date, time
 from bs4 import BeautifulSoup
 
 @dataclass
-class InstrumentIdentity:
-    isin: str = None
-    tsetmc_code: str = None
-    ticker: str = None
-    name_persian: str = None
-    name_english: str = None
+class InstrumentIdentity(instrument.InstrumentIdentification):
     market_code: int = None
     market_title: str = None
     sector_code: int = None
@@ -55,17 +51,7 @@ class InstrumentSearchItem:
         return f"{self.ticker} <{self.tsetmc_code}>"
 
 @dataclass
-class ClosingPriceInfo:
-    last_trade_datetime: datetime = None
-    close_price: int = None
-    last_price: int = None
-    open_price: int = None
-    max_price: int = None
-    min_price: int = None
-    previous_price: int = None
-    trade_num: int = None
-    trade_value: int = None
-    trade_volume: int = None
+class ClosingPriceInfo(realtime.TradeCandle):
     nsc: Nsc = None
 
     def __init__(self, tsetmc_raw_data):
@@ -85,11 +71,7 @@ class ClosingPriceInfo:
                                             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
 
 @dataclass
-class InstrumentInfo:
-    isin: str = None
-    name_persian: str = None
-    name_english: str = None
-    ticker: str = None
+class InstrumentInfo(InstrumentIdentity):
     base_volume: int = None
     liquid_percentage: float = None
     max_price_weekly: int = None
@@ -98,11 +80,8 @@ class InstrumentInfo:
     min_price_annual: int = None
     average_trade_volume_monthly: int = None
     total_shares: int = None
-    market_code: int = None
-    market_title: str = None
     max_price_threshold: int = None
     min_price_threshold: int = None
-    type_id: int = None
 
     def __init__(self, tsetmc_raw_data):
         self.isin = tsetmc_raw_data["instrumentID"]
@@ -124,16 +103,7 @@ class InstrumentInfo:
         self.liquid_percentage = None if len(tsetmc_raw_data["kAjCapValCpsIdx"]) == 0 else float(tsetmc_raw_data["kAjCapValCpsIdx"])
 
 @dataclass
-class ClientType:
-    legal_buy_num: int = None
-    legal_buy_volume: int = None
-    legal_sell_num: int = None
-    legal_sell_volume: int = None
-    natural_buy_num: int = None
-    natural_buy_volume: int = None
-    natural_sell_num: int = None
-    natural_sell_volume: int = None
-
+class ClientType(realtime.ClientType):
     def __init__(self, tsetmc_raw_data):
         self.legal_buy_num = tsetmc_raw_data["buy_CountN"]
         self.legal_buy_volume = tsetmc_raw_data["buy_N_Volume"]
@@ -145,14 +115,7 @@ class ClientType:
         self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
 
 @dataclass
-class BestLimitsRow:
-    demand_num: int = None
-    demand_volume: int = None
-    demand_price: int = None
-    supply_num: int = None
-    supply_volume: int = None
-    supply_price: int = None
-
+class BestLimitsRow(realtime.OrderBookRow):
     def __init__(self, tsetmc_raw_data):
         self.demand_num = tsetmc_raw_data["zOrdMeDem"]
         self.demand_volume = tsetmc_raw_data["qTitMeDem"]
@@ -210,7 +173,7 @@ class ClientTypeDaily(ClientType):
         self.record_date = date(year=rd_date // 10000, month=rd_date // 100 % 100, day=rd_date % 100)
 
 @dataclass
-class TradeIntraday():
+class TradeIntraday:
     price: int = None
     volume: int = None
     index: int = None
@@ -390,23 +353,10 @@ class MarketWatchBestLimits:
         self.rows = [MarketWatchBestLimitsRow(x) for x in tsetmc_raw_data]
 
 @dataclass
-class MarketWatchTradeData():
-    isin: str = None
-    tsetmc_code: str = None
-    ticker: str = None
-    name_persian: str = None
+class MarketWatchTradeData(realtime.TradeCandle, instrument.InstrumentIdentification):
     last_trade_time: time = None
-    close_price: int = None
-    last_price: int = None
-    open_price: int = None
-    max_price: int = None
-    min_price: int = None
-    previous_price: int = None
     max_price_threshold: int = None
     min_price_threshold: int = None
-    trade_num: int = None
-    trade_value: int = None
-    trade_volume: int = None
     eps: int = None
     total_shares: int = None
     base_volume: int = None
