@@ -73,5 +73,3 @@ class Order:
     def __str__(self):
         return f"{self.side}|{self.state}|{self.oms_id}|{self.isin}|P:{self.price},Q:{self.quantity}"
 
-
-
