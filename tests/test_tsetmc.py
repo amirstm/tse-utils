@@ -104,7 +104,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_client_type_daily_list(self.sample_instrument.identification.tsetmc_code)
             chosen_date = date(year=2023, month=9, day=11)
-            date_data = next(x for x in data if x.record_date == chosen_date)
+            date_data = next(x for x in data if x.date == chosen_date)
             self.assertTrue(date_data.legal_buy_num == 13)
             self.assertTrue(date_data.legal_buy_value == 259393764720)
             self.assertTrue(date_data.legal_buy_volume == 46754064)
@@ -137,7 +137,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_price_adjustment_list(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(len(data) > 10)
-            self.assertTrue(any(x.record_date == date(year=2023, month=7, day=22) 
+            self.assertTrue(any(x.date == date(year=2023, month=7, day=22) 
                                 and x.price_before == 5460 
                                 and x.price_after == 4960 for x in data))
 
@@ -150,7 +150,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_instrument_share_change(self.sample_instrument.identification.tsetmc_code)
             self.assertTrue(len(data) > 5)
-            self.assertTrue(any(x.record_date == date(year=2022, month=8, day=9) 
+            self.assertTrue(any(x.date == date(year=2022, month=8, day=9) 
                                 and x.total_shares_before == 293000000000 
                                 and x.total_shares_after == 530000000000 for x in data))
 
@@ -167,7 +167,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             chosen_data = next(x for x in data if x.index == 15552)
             self.assertTrue(chosen_data.volume == 100790 
                             and chosen_data.price == 7250 
-                            and chosen_data.record_time == time(hour=12, minute=26, second=6)
+                            and chosen_data.time == time(hour=12, minute=26, second=6)
                             and chosen_data.is_canceled)
 
     async def test_get_best_limits_intraday_history_list_raw(self):
@@ -180,7 +180,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_best_limits_intraday_history_list(
                 self.sample_instrument.identification.tsetmc_code, self.sample_date)
-            self.assertTrue(any(x.record_time == time(hour=8, minute=45, second=36) and
+            self.assertTrue(any(x.time == time(hour=8, minute=45, second=36) and
                                 x.row_number == 5 and x.reference_id == 11679170214 and
                                 x.demand_volume == 163213 and x.demand_price == 7000 for x in data))
 
@@ -192,7 +192,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
     async def test_get_index_history(self):
         async with TsetmcScraper() as tsetmc:
             data = await tsetmc.get_index_history(self.sample_index_identification.tsetmc_code)
-            self.assertTrue(any(x.record_date == date(year=2023, month=9, day=13) and
+            self.assertTrue(any(x.date == date(year=2023, month=9, day=13) and
                                 x.last_value == 2126741.7 and x.min_value == 2126690 and
                                 x.max_value == 2130510 for x in data))
 

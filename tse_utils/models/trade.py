@@ -45,6 +45,21 @@ class Order:
         """
         self.expiration_date = expiration_date
         self.lock = lock
+        self.trades: list[MicroTrade] = []
 
     def __str__(self):
         return f"{self.side}|{self.state}|{self.id}|{self.isin}|P:{self.price},Q:{self.quantity}"
+
+
+@dataclass
+class MicroTrade:
+    """
+    Holds data for a single micro trade.
+    """
+    id = None
+    isin: str = None
+    side: TradeSide = None
+    quantity: int = None
+    price: int = None
+    datetime: datetime = None
+    htn: str = None

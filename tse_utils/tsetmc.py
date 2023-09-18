@@ -154,7 +154,7 @@ class ClientTypeDaily(ClientType):
     legal_sell_value: int = None
     natural_buy_value: int = None
     natural_sell_value: int = None
-    record_date: date = None
+    date: date = None
 
     def __init__(self, tsetmc_raw_data):
         self.legal_buy_num = tsetmc_raw_data["buy_N_Count"]
@@ -170,14 +170,14 @@ class ClientTypeDaily(ClientType):
         self.natural_sell_value = tsetmc_raw_data["sell_I_Value"]
         self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
         rd_date = tsetmc_raw_data["recDate"]
-        self.record_date = date(year=rd_date // 10000, month=rd_date // 100 % 100, day=rd_date % 100)
+        self.date = date(year=rd_date // 10000, month=rd_date // 100 % 100, day=rd_date % 100)
 
 @dataclass
 class TradeIntraday:
     price: int = None
     volume: int = None
     index: int = None
-    record_time: time = None
+    time: time = None
     is_canceled: bool = None
 
     def __init__(self, tsetmc_raw_data):
@@ -185,12 +185,12 @@ class TradeIntraday:
         self.volume = tsetmc_raw_data["qTitTran"]
         self.index = tsetmc_raw_data["nTran"]
         hEven = tsetmc_raw_data["hEven"]
-        self.record_time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
+        self.time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
         self.is_canceled = bool(tsetmc_raw_data["canceled"])
 
 @dataclass
 class PriceAdjustment:
-    record_date: date = None
+    date: date = None
     price_before: int = None
     price_after: int = None
 
@@ -198,11 +198,11 @@ class PriceAdjustment:
         self.price_before = tsetmc_raw_data["pClosingNotAdjusted"]
         self.price_after = tsetmc_raw_data["pClosing"]
         dEven = tsetmc_raw_data["dEven"]
-        self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+        self.date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
 
 @dataclass
 class InstrumentShareChange:
-    record_date: date = None
+    date: date = None
     total_shares_before: int = None
     total_shares_after: int = None
 
@@ -210,24 +210,24 @@ class InstrumentShareChange:
         self.total_shares_before = tsetmc_raw_data["numberOfShareOld"]
         self.total_shares_after = tsetmc_raw_data["numberOfShareNew"]
         dEven = tsetmc_raw_data["dEven"]
-        self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+        self.date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
 
 @dataclass
 class BestLimitsHistoryRow(BestLimitsRow):
     row_number: int = None
-    record_time: time = None
+    time: time = None
     reference_id: int = None
 
     def __init__(self, tsetmc_raw_data, *args):
         self.row_number = tsetmc_raw_data["number"]
         self.reference_id = tsetmc_raw_data["refID"]
         hEven = tsetmc_raw_data["hEven"]
-        self.record_time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
+        self.time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
         super(BestLimitsHistoryRow, self).__init__(tsetmc_raw_data=tsetmc_raw_data, *args)
 
 @dataclass
 class IndexDaily:
-    record_date: date = None
+    date: date = None
     min_value: float = None
     max_value: float = None
     last_value: float = None 
@@ -237,7 +237,7 @@ class IndexDaily:
         self.max_value = tsetmc_raw_data["xNivInuPhMresIbs"]
         self.last_value = tsetmc_raw_data["xNivInuClMresIbs"]
         dEven = tsetmc_raw_data["dEven"]
-        self.record_date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+        self.date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
 
 @dataclass
 class InstrumentOptionInfo:
@@ -275,7 +275,7 @@ class PrimaryMarketOverview:
     index_change: int = None
     index_equal_weighted_last_value: int = None
     index_equal_weighted_change: int = None
-    record_datetime: datetime = None
+    datetime: datetime = None
     trade_value: int = None
     trade_volume: int = None
     trade_num: int = None
@@ -290,7 +290,7 @@ class PrimaryMarketOverview:
         self.index_last_value = tsetmc_raw_data["indexLastValue"]
         marketActivityDEven = tsetmc_raw_data["marketActivityDEven"]
         marketActivityHEven = tsetmc_raw_data["marketActivityHEven"]
-        self.record_datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
+        self.datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
                                         day=marketActivityDEven % 100, hour=marketActivityHEven // 10000, 
                                         minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
         self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
@@ -307,7 +307,7 @@ class SecondaryMarketOverview:
     '''
     index_last_value: int = None
     index_change: int = None
-    record_datetime: datetime = None
+    datetime: datetime = None
     trade_value: int = None
     trade_volume: int = None
     trade_num: int = None
@@ -321,7 +321,7 @@ class SecondaryMarketOverview:
         self.index_last_value = tsetmc_raw_data["indexLastValue"]
         marketActivityDEven = tsetmc_raw_data["marketActivityDEven"]
         marketActivityHEven = tsetmc_raw_data["marketActivityHEven"]
-        self.record_datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
+        self.datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
                                         day=marketActivityDEven % 100, hour=marketActivityHEven // 10000, 
                                         minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
         self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
