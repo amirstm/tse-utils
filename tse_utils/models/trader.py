@@ -212,12 +212,10 @@ class Trader(ABC):
     """
     Trader class holds the data for a single trader account and can be inheridated by classes specialized in training using a speicif OMS API.
     """
-    def __init__(self, identification: TraderIdentification, api: TradingAPI, token_type: TraderTokenType = None,
-                 logger_name: str = None):
+    def __init__(self, identification: TraderIdentification, api: TradingAPI, logger_name: str = None):
         self.identification = identification
         self.portfolio = Portfolio()
         self.api = api
-        self.token_type = token_type
         self.logger = logging.getLogger(logger_name)
         self.connection_state: TraderConnectionState = TraderConnectionState.NO_LOGIN
 
