@@ -21,7 +21,7 @@ class OrderState(Enum):
     CANCELED = "حذف شده"
     ERROR = "خطا"
 
-    def is_active(self):
+    def is_active(self) -> bool:
         return self == OrderState.ACTIVE
     
 class OrderValidity(Enum):
@@ -39,4 +39,17 @@ class OrderLock(Enum):
 class TraderTokenType(Enum):
     ONLINE = "آنلاین"
     API = "API"
+
+class TraderConnectionState(Enum):
+    NO_LOGIN = "وارد نشده"
+    CONNECTING = "در حال اتصال"
+    CONNECTED = "متصل"
+    RECONNECTING = "در حال اتصال مجدد"
+    CONNECTION_BROKEN = "قطع اتصال"
+    LOGGED_OUT = "خارج شده"
+
+    def is_stable(self) -> bool:
+        return self == TraderConnectionState.NO_LOGIN or self == TraderConnectionState.CONNECTED or self == TraderConnectionState.LOGGED_OUT
     
+    def can_request_connect(self) -> bool:
+        return self == TraderConnectionState.NO_LOGIN or self == TraderConnectionState.LOGGED_OUT

@@ -219,6 +219,7 @@ class Trader(ABC):
         self.api = api
         self.token_type = token_type
         self.logger = logging.getLogger(logger_name)
+        self.connection_state: TraderConnectionState = TraderConnectionState.NO_LOGIN
 
     def __str__(self) -> str:
         return str(self.identification)
