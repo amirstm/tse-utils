@@ -191,5 +191,3 @@ class Portfolio:
                 self._positions.append(PortfolioSecurity(isin=isin, quantity=quantity, position_open_price=position_open_price,
                                                       instrument_close_price=instrument_close_price, 
                                                       instrument_last_price=instrument_last_price))
-    
-

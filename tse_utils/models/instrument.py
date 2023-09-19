@@ -39,6 +39,7 @@ class Instrument:
         self.orderbook = OrderBook()
         self.client_type = ClientType()
         self.intraday_trade_candle = TradeCandle()
+        self.deep_orderbook = DeepOrderBook()
 
     def ticker_with_tsetmc_hyperlink(self) -> str:
         """
