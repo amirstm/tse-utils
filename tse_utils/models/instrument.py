@@ -80,5 +80,20 @@ class IndexIdentification:
     tsetmc_code: str = None
     persian_name:str = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.persian_name} [{self.tsetmc_code}]"
+
+class Index:
+    """
+    Holds all available data for a specific index.
+    """
+    def __init__(self, identification: IndexIdentification, min_value: int = None, max_value: int = None,
+                 last_value: int = None):
+        self.identification = identification
+        self.min_value = min_value
+        self.max_value = max_value
+        self.last_value = last_value
+
+    def __str__(self) -> str:
+        return f"{self.identification}"
+
