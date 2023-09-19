@@ -1,24 +1,8 @@
 from dataclasses import dataclass
 from tse_utils.models.enums import *
 from datetime import time, date, datetime
-import threading
+import threading, logging
 from abc import ABC, abstractmethod
-
-@dataclass
-class TraderIdentification:
-    """
-    Holds the identification for a trader.
-    """
-    id: int = None
-    username: str = None
-    password: str = None
-    first_name: str = None
-    last_name: str = None
-    bourse_code: str = None
-    oms_code: str = None
-
-    def __str__(self) -> str:
-        return f"{self.username}"
 
 @dataclass
 class MicroTrade:
@@ -196,6 +180,26 @@ class Portfolio:
                                                       instrument_last_price=instrument_last_price))
 
 @dataclass
+class TraderIdentification:
+    """
+    Holds the identification for a trader.
+    """
+    id: int = None
+    username: str = None
+    password: str = None
+    first_name: str = None
+    last_name: str = None
+    """
+    display_name is used for logging purposes. If it is not set, username will be used insted.
+    """
+    display_name: str = None
+    bourse_code: str = None
+    oms_code: str = None
+
+    def __str__(self) -> str:
+        return self.display_name if self.display_name else self.username
+
+@dataclass
 class TradingAPI:
     broker_title: str = None
     oms_title: str = None
@@ -208,11 +212,16 @@ class Trader(ABC):
     """
     Trader class holds the data for a single trader account and can be inheridated by classes specialized in training using a speicif OMS API.
     """
-    def __init__(self, identification: TraderIdentification, api: TradingAPI, token_type: TraderTokenType = None):
+    def __init__(self, identification: TraderIdentification, api: TradingAPI, token_type: TraderTokenType = None,
+                 logger_name: str = None):
         self.identification = identification
         self.portfolio = Portfolio()
         self.api = api
         self.token_type = token_type
+        self.logger = logging.getLogger(logger_name)
+
+    def __str__(self) -> str:
+        return str(self.identification)
 
     # @abstractmethod
     # def get_broker(self):
