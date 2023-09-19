@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from tse_utils.models.enums import *
 from datetime import time, date, datetime
 import threading
+from abc import ABC, abstractmethod
 
 @dataclass
 class TraderIdentification:
@@ -13,6 +14,8 @@ class TraderIdentification:
     password: str = None
     first_name: str = None
     last_name: str = None
+    bourse_code: str = None
+    oms_code: str = None
 
     def __str__(self) -> str:
         return f"{self.username}"
@@ -191,3 +194,26 @@ class Portfolio:
                 self._positions.append(PortfolioSecurity(isin=isin, quantity=quantity, position_open_price=position_open_price,
                                                       instrument_close_price=instrument_close_price, 
                                                       instrument_last_price=instrument_last_price))
+
+@dataclass
+class TradingAPI:
+    broker_title: str = None
+    oms_title: str = None
+    oms_domain: str = None 
+
+    def __str__(self) -> str:
+        return f"{self.oms_title} - {self.broker_title}"
+
+class Trader(ABC):
+    """
+    Trader class holds the data for a single trader account and can be inheridated by classes specialized in training using a speicif OMS API.
+    """
+    def __init__(self, identification: TraderIdentification, api: TradingAPI, token_type: TraderTokenType = None):
+        self.identification = identification
+        self.portfolio = Portfolio()
+        self.api = api
+        self.token_type = token_type
+
+    # @abstractmethod
+    # def get_broker(self):
+    #     pass

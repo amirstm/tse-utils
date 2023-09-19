@@ -35,3 +35,8 @@ class OrderLock(Enum):
     LOCK_FOR_CREATION = "قفل برای ایجاد"
     LOCK_FOR_EDITION = "قفل برای ویرایش"
     LOCK_FOR_CANCELATION = "قفل برای حذف"
+
+class TraderTokenType(Enum):
+    ONLINE = "آنلاین"
+    API = "API"
+    
