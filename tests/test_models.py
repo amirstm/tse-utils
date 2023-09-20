@@ -106,8 +106,6 @@ class TestModels(unittest.TestCase):
         self.assertTrue(sample_trader.get_orders())
         sample_trader.empty_orders()
         self.assertFalse(sample_trader.get_orders())
-        
-
 
 if __name__ == '__main__':
     unittest.main()

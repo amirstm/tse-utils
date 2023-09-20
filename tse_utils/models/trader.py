@@ -222,16 +222,20 @@ class Trader(ABC):
         self.portfolio = Portfolio()
         self._orders: list[Order] = []
         self._orders_lock = threading.Lock()
-        self.subscribed_instruments: list[instrument.Instrument]
+        self._subscribed_instruments: list[instrument.Instrument] = []
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        pass # TODO : Code this method
+        try:
+            await self.disconnect()
+        except Exception as ex:
+            self.logger.error("Disconnect failed while disposing object.")
+            self.logger.debug("Encountered {0} when trying to disconnect.".format(ex))
 
     def __str__(self) -> str:
-        return str(self.identification)
+        return f"{str(self.identification)}@{self.api.broker_title}"
 
     def get_order(self, oms_id) -> Order:
         with self._orders_lock:
@@ -259,6 +263,48 @@ class Trader(ABC):
         with self._orders_lock:
             self._orders.append(order)
 
-    # @abstractmethod
-    # def get_broker(self):
-    #     pass
+    def get_subscribed_instrument(self, isin: str = None):
+        return next((x for x in self._subscribed_instruments if x.identification.isin == isin), None)
+
+    @abstractmethod
+    async def connect(self) -> None:
+        """
+        Does a single attempt on logging in to the trader account
+        """
+        pass
+
+    @abstractmethod
+    async def connect_looper(self, interval: int = 3, max_trial = 10) -> None:
+        """
+        Recursively trying to login to the trader account
+        """
+        pass
+
+    @abstractmethod
+    async def disconnect(self) -> None:
+        """
+        Logs of from the trader account
+        """
+        pass
+
+    @abstractmethod
+    async def get_server_datetime(self)  -> datetime:
+        """
+        Gets server datetime
+        """
+        pass
+
+    @abstractmethod
+    async def pull_trader_data(self):
+        """
+        Fetches client data from OMS using a pull request
+        """
+        pass
+
+    @abstractmethod
+    async def subscribe_instruments_list(self, instruments: list[instrument.Instrument]):
+        """
+        Subscribes the instruments on the OMS pusher to get their realtime data
+        """
+        pass
+
