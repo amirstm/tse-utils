@@ -1,5 +1,4 @@
 import unittest, sys, asyncio
-sys.path.append("..")
 from tse_utils.models import trader, instrument, realtime, enums
 from datetime import datetime, date, time
 
@@ -77,7 +76,30 @@ class TestModels(unittest.TestCase):
         self.assertFalse(sell_rows)
 
     def test_trader_order_dynamics(self):
-        sample_trader = trader.Trader(trader.TraderIdentification(), trader.TradingAPI())
+        class ImplementedTrader(trader.Trader):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+            async def connect(self) -> None:
+                pass
+            async def connect_looper(self, interval: int = 3, max_trial = 10) -> None:
+                pass
+            async def disconnect(self) -> None:
+                pass
+            async def get_server_datetime(self)  -> datetime:
+                pass
+            async def pull_trader_data(self):
+                pass
+            async def subscribe_instruments_list(self, instruments: list[instrument.Instrument]):
+                pass
+            async def order_send(side: enums.TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
+                                validity: enums.OrderValidity = enums.OrderValidity.DAY, expiration_date: date = None):
+                pass
+            async def order_cancel(order: trader.Order):
+                pass
+            async def order_edit(order: trader.Order, quantity: int, price: int):
+                pass
+
+        sample_trader = ImplementedTrader(trader.TraderIdentification(), trader.TradingAPI())
         # Initiation
         sample_trader.add_order(trader.Order(oms_id=1, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=10, price=5))
         sample_trader.add_order(trader.Order(oms_id=2, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.SELL, quantity=20, price=30))
