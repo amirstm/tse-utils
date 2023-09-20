@@ -308,3 +308,11 @@ class Trader(ABC):
         """
         pass
 
+    @abstractmethod
+    async def order_send(side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
+                         validity: OrderValidity = OrderValidity.DAY, expiration_date: date = None):
+        pass
+
+    @abstractmethod
+    async def order_cancel(oms_id):
+        pass
