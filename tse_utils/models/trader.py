@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from tse_utils.models.enums import *
+from tse_utils.models import instrument
 from datetime import time, date, datetime
-import threading, logging
+import threading, logging, asyncio
 from abc import ABC, abstractmethod
+from typing import Callable
 
 @dataclass
 class MicroTrade:
@@ -214,13 +216,48 @@ class Trader(ABC):
     """
     def __init__(self, identification: TraderIdentification, api: TradingAPI, logger_name: str = None):
         self.identification = identification
-        self.portfolio = Portfolio()
         self.api = api
         self.logger = logging.getLogger(logger_name)
         self.connection_state: TraderConnectionState = TraderConnectionState.NO_LOGIN
+        self.portfolio = Portfolio()
+        self._orders: list[Order] = []
+        self._orders_lock = threading.Lock()
+        self.subscribed_instruments: list[instrument.Instrument]
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        pass # TODO : Code this method
 
     def __str__(self) -> str:
         return str(self.identification)
+
+    def get_order(self, oms_id) -> Order:
+        with self._orders_lock:
+            return next((x for x in self._orders if x.oms_id == oms_id), None)
+
+    def get_order_custom(self, filter: Callable[[Order], bool]) -> Order:
+        with self._orders_lock:
+            return next((x for x in self._orders if filter(x)), None)
+
+    def get_orders(self, filter: Callable[[Order], bool] = lambda x: True) -> list[Order]:
+        with self._orders_lock:
+            return [x for x in self._orders if filter(x)]
+
+    def remove_order(self, oms_id) -> None:
+        with self._orders_lock:
+            order = next((x for x in self._orders if x.oms_id == oms_id), None)
+            if order:
+                self._orders.remove(order)
+
+    def empty_orders(self) -> None:
+        with self._orders_lock:
+            self._orders.clear()
+
+    def add_order(self, order: Order) -> None:
+        with self._orders_lock:
+            self._orders.append(order)
 
     # @abstractmethod
     # def get_broker(self):

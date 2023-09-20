@@ -1,6 +1,6 @@
 import unittest, sys, asyncio
 sys.path.append("..")
-from tse_utils.models import trader, instrument, realtime
+from tse_utils.models import trader, instrument, realtime, enums
 from datetime import datetime, date, time
 
 class TestModels(unittest.TestCase):
@@ -75,6 +75,39 @@ class TestModels(unittest.TestCase):
         sell_rows = deep_order_book.get_sell_rows()
         self.assertFalse(buy_rows)
         self.assertFalse(sell_rows)
+
+    def test_trader_order_dynamics(self):
+        sample_trader = trader.Trader(trader.TraderIdentification(), trader.TradingAPI())
+        # Initiation
+        sample_trader.add_order(trader.Order(oms_id=1, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=10, price=5))
+        sample_trader.add_order(trader.Order(oms_id=2, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.SELL, quantity=20, price=30))
+        sample_trader.add_order(trader.Order(oms_id=3, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=30, price=20))
+        sample_trader.add_order(trader.Order(oms_id=4, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=40, price=20))
+        self.assertTrue(sample_trader.get_order(1).quantity == 10)
+        self.assertTrue(sample_trader.get_order(4).quantity == 40)
+        self.assertTrue(sample_trader.get_order_custom(lambda x: x.side == enums.TradeSide.SELL).oms_id == 2)
+        self.assertTrue(sample_trader.get_order_custom(lambda x: x.price == 20).oms_id == 3)
+        self.assertIsNone(sample_trader.get_order(5))
+        self.assertIsNone(sample_trader.get_order_custom(lambda x: x.quantity == 100))
+        all_orders = sample_trader.get_orders()
+        buy_orders = sample_trader.get_orders(lambda x: x.side == enums.TradeSide.BUY)
+        self.assertTrue(len(all_orders) == 4)
+        self.assertTrue(len(buy_orders) == 3)
+        # Edition
+        sample_order = sample_trader.get_order_custom(lambda x: x.quantity == 30)
+        sample_order.price = 25
+        sample_order.quantity = 35
+        self.assertTrue(sample_trader.get_order_custom(lambda x: x.price == 20).oms_id == 4)
+        self.assertTrue(sample_trader.get_order_custom(lambda x: x.quantity == 35).price == 25)
+        # Deletion
+        sample_trader.remove_order(3)
+        self.assertIsNone(sample_trader.get_order_custom(lambda x: x.quantity == 35))
+        # Emptying
+        self.assertTrue(sample_trader.get_orders())
+        sample_trader.empty_orders()
+        self.assertFalse(sample_trader.get_orders())
+        
+
 
 if __name__ == '__main__':
     unittest.main()
