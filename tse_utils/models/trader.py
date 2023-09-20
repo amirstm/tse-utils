@@ -314,5 +314,10 @@ class Trader(ABC):
         pass
 
     @abstractmethod
-    async def order_cancel(oms_id):
+    async def order_cancel(order: Order):
         pass
+
+    @abstractmethod
+    async def order_edit(order: Order, quantity: int, price: int):
+        pass
+    
