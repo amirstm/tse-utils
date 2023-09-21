@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="tse_utils",
-    version="0.0.2",
+    version="0.0.3",
     author="Arka Equities & Securities",
     author_email="info@arkaequities.com",
     description="General utilities used for data mining in Tehran Stock Exchange (TSE).",
