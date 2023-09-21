@@ -3,6 +3,7 @@ from tse_utils.models.enums import Nsc
 from tse_utils.models.realtime import *
 from datetime import time, date, datetime
 
+
 @dataclass
 class InstrumentIdentification:
     """
@@ -17,13 +18,15 @@ class InstrumentIdentification:
 
     def __str__(self):
         return f"{self.ticker} [{self.isin}]"
-    
+
+
 class Instrument:
     """
     Holds all available data for a specific tradable instrument.
     """
-    def __init__(self, identification: InstrumentIdentification, max_price_threshold: int = None, min_price_threshold: int = None, 
-                 max_buy_order_quantity_threshold: int = None, max_sell_order_quantity_threshold: int = None, base_volume: int = 1, 
+
+    def __init__(self, identification: InstrumentIdentification, max_price_threshold: int = None, min_price_threshold: int = None,
+                 max_buy_order_quantity_threshold: int = None, max_sell_order_quantity_threshold: int = None, base_volume: int = 1,
                  lot_size: int = 1, total_shares: int = None, price_tick: int = 1, is_obsolete: bool = False, nsc: Nsc = None):
         self.identification = identification
         self.max_price_threshold = max_price_threshold
@@ -56,13 +59,16 @@ class Instrument:
     def __str__(self):
         return str(self.identification)
 
+
 class DerivativeInstrument(Instrument):
     '''
     Derivative instrument contains a self.underlying that represents the underlying instrument.
     '''
+
     def __init__(self, underlying: Instrument, **kwargs):
         self.underlying = underlying
         super().__init__(**kwargs)
+
 
 class OptionInstrument(DerivativeInstrument):
 
@@ -72,21 +78,24 @@ class OptionInstrument(DerivativeInstrument):
         self.lot_size = lot_size
         super().__init__(**kwargs)
 
+
 @dataclass
 class IndexIdentification:
     """
     Holds the identification for an index, for example the overal index.
     """
     tsetmc_code: str = None
-    persian_name:str = None
+    persian_name: str = None
 
     def __str__(self) -> str:
         return f"{self.persian_name} [{self.tsetmc_code}]"
+
 
 class Index:
     """
     Holds all available data for a specific index.
     """
+
     def __init__(self, identification: IndexIdentification, min_value: int = None, max_value: int = None,
                  last_value: int = None):
         self.identification = identification
@@ -96,4 +105,3 @@ class Index:
 
     def __str__(self) -> str:
         return f"{self.identification}"
-

@@ -8,7 +8,7 @@ setuptools.setup(
     description="General utilities used for data mining in Tehran Stock Exchange (TSE).",
     packages=setuptools.find_packages(),
     install_requires=["httpx", "beautifulsoup4", "lxml"],
-    classifiers= [
+    classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: POSIX :: Linux",
         "Operating System :: MacOS :: MacOS X",

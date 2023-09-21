@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import threading
 
+
 @dataclass
 class OrderBookRow():
     """
@@ -17,14 +18,17 @@ class OrderBookRow():
     def __str__(self):
         return f"{self.supply_num} {self.supply_volume} {self.supply_price} | {self.demand_price} {self.demand_volume} {self.demand_num}"
 
+
 class OrderBook():
     """
     Orderbook contains the top n rows of an instrument's orders on both sides.
     """
+
     def __init__(self, row_count: int = 5):
         self.rows = [OrderBookRow() for i in range(row_count)]
-    
+
     # def get_diff(self): TODO: get difference with order
+
 
 @dataclass
 class ClientType():
@@ -41,7 +45,8 @@ class ClientType():
     natural_sell_volume: int = None
 
     def trade_volume(self) -> int:
-        return self.LegalBuyVolume + self.NaturalBuyVolume
+        return self.legal_buy_volume + self.natural_buy_volume
+
 
 @dataclass
 class TradeCandle():
@@ -57,6 +62,7 @@ class TradeCandle():
     open_trade_datetime: datetime = None
     last_trade_datetime: datetime = None
 
+
 @dataclass
 class DeepOrderBookRow:
     num: int
@@ -66,10 +72,12 @@ class DeepOrderBookRow:
     def __str__(self) -> str:
         return f"{self.volume} @ {self.price}"
 
+
 class DeepOrderBook:
     """
     DeepOrderbook contains all rows of an instrument's orders on both sides.
     """
+
     def __init__(self):
         self._buy_rows: list[DeepOrderBookRow] = []
         self._buy_rows_lock: threading.Lock = threading.Lock()
@@ -83,7 +91,8 @@ class DeepOrderBook:
                 row.volume = volume
                 row.num = num
             else:
-                self._buy_rows.append(DeepOrderBookRow(num=num, volume=volume, price=price))
+                self._buy_rows.append(DeepOrderBookRow(
+                    num=num, volume=volume, price=price))
 
     def update_sell_row(self, num: int, volume: int, price: int) -> None:
         with self._sell_rows_lock:
@@ -92,7 +101,8 @@ class DeepOrderBook:
                 row.volume = volume
                 row.num = num
             else:
-                self._sell_rows.append(DeepOrderBookRow(num=num, volume=volume, price=price))
+                self._sell_rows.append(DeepOrderBookRow(
+                    num=num, volume=volume, price=price))
 
     def remove_buy_row(self, price: int) -> None:
         with self._buy_rows_lock:

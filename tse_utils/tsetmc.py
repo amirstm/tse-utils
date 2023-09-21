@@ -1,10 +1,13 @@
-import asyncio, httpx, json
+import asyncio
+import httpx
+import json
 from tse_utils.exceptions import MyProjectError
 from tse_utils.models.enums import *
 from tse_utils.models import realtime, instrument
 from dataclasses import dataclass
 from datetime import datetime, date, time
 from bs4 import BeautifulSoup
+
 
 @dataclass
 class InstrumentIdentity(instrument.InstrumentIdentification):
@@ -23,7 +26,8 @@ class InstrumentIdentity(instrument.InstrumentIdentification):
         self.ticker = tsetmc_raw_data["lVal18AFC"]
         self.market_title = tsetmc_raw_data["cgrValCotTitle"]
         self.market_code = tsetmc_raw_data["cComVal"]
-        self.sector_code = int(tsetmc_raw_data["sector"]["cSecVal"].replace(" ", ""))
+        self.sector_code = int(
+            tsetmc_raw_data["sector"]["cSecVal"].replace(" ", ""))
         self.sector_title = tsetmc_raw_data["sector"]["lSecVal"]
         self.sub_sector_code = tsetmc_raw_data["subSector"]["cSoSecVal"]
         self.sub_sector_title = tsetmc_raw_data["subSector"]["lSoSecVal"]
@@ -31,7 +35,8 @@ class InstrumentIdentity(instrument.InstrumentIdentification):
 
     def __str__(self):
         return f"{self.ticker} [{self.isin}]"
- 
+
+
 @dataclass
 class InstrumentSearchItem:
     ticker: str = None
@@ -50,6 +55,7 @@ class InstrumentSearchItem:
     def __str__(self):
         return f"{self.ticker} <{self.tsetmc_code}>"
 
+
 @dataclass
 class ClosingPriceInfo(realtime.TradeCandle):
     nsc: Nsc = None
@@ -64,11 +70,13 @@ class ClosingPriceInfo(realtime.TradeCandle):
         self.trade_value = tsetmc_raw_data["qTotCap"]
         self.trade_volume = tsetmc_raw_data["qTotTran5J"]
         self.trade_num = tsetmc_raw_data["zTotTran"]
-        self.nsc = Nsc[str(tsetmc_raw_data["instrumentState"]["cEtaval"]).replace(" ", "")]
+        self.nsc = Nsc[str(tsetmc_raw_data["instrumentState"]
+                           ["cEtaval"]).replace(" ", "")]
         ltd_date = tsetmc_raw_data["finalLastDate"]
         ltd_time = tsetmc_raw_data["hEven"]
         self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
                                             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
+
 
 @dataclass
 class InstrumentInfo(InstrumentIdentity):
@@ -100,7 +108,9 @@ class InstrumentInfo(InstrumentIdentity):
         self.max_price_annual = tsetmc_raw_data["maxYear"]
         self.min_price_annual = tsetmc_raw_data["minYear"]
         self.average_trade_volume_monthly = tsetmc_raw_data["qTotTran5JAvg"]
-        self.liquid_percentage = None if len(tsetmc_raw_data["kAjCapValCpsIdx"]) == 0 else float(tsetmc_raw_data["kAjCapValCpsIdx"])
+        self.liquid_percentage = None if len(
+            tsetmc_raw_data["kAjCapValCpsIdx"]) == 0 else float(tsetmc_raw_data["kAjCapValCpsIdx"])
+
 
 @dataclass
 class ClientType(realtime.ClientType):
@@ -114,6 +124,7 @@ class ClientType(realtime.ClientType):
         self.natural_sell_num = tsetmc_raw_data["sell_CountI"]
         self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
 
+
 @dataclass
 class BestLimitsRow(realtime.OrderBookRow):
     def __init__(self, tsetmc_raw_data):
@@ -124,12 +135,14 @@ class BestLimitsRow(realtime.OrderBookRow):
         self.supply_volume = tsetmc_raw_data["qTitMeOf"]
         self.supply_price = tsetmc_raw_data["pMeOf"]
 
+
 @dataclass
 class BestLimits:
     rows: list[BestLimitsRow] = None
 
     def __init__(self, tsetmc_raw_data):
         self.rows = [BestLimitsRow(x) for x in tsetmc_raw_data]
+
 
 @dataclass
 class ClosingPriceDaily(ClosingPriceInfo):
@@ -147,6 +160,7 @@ class ClosingPriceDaily(ClosingPriceInfo):
         ltd_time = tsetmc_raw_data["hEven"]
         self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
                                             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
+
 
 @dataclass
 class ClientTypeDaily(ClientType):
@@ -170,7 +184,9 @@ class ClientTypeDaily(ClientType):
         self.natural_sell_value = tsetmc_raw_data["sell_I_Value"]
         self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
         rd_date = tsetmc_raw_data["recDate"]
-        self.date = date(year=rd_date // 10000, month=rd_date // 100 % 100, day=rd_date % 100)
+        self.date = date(year=rd_date // 10000, month=rd_date //
+                         100 % 100, day=rd_date % 100)
+
 
 @dataclass
 class TradeIntraday:
@@ -185,8 +201,10 @@ class TradeIntraday:
         self.volume = tsetmc_raw_data["qTitTran"]
         self.index = tsetmc_raw_data["nTran"]
         hEven = tsetmc_raw_data["hEven"]
-        self.time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
+        self.time = time(hour=hEven // 10000, minute=hEven //
+                         100 % 100, second=hEven % 100)
         self.is_canceled = bool(tsetmc_raw_data["canceled"])
+
 
 @dataclass
 class PriceAdjustment:
@@ -198,7 +216,9 @@ class PriceAdjustment:
         self.price_before = tsetmc_raw_data["pClosingNotAdjusted"]
         self.price_after = tsetmc_raw_data["pClosing"]
         dEven = tsetmc_raw_data["dEven"]
-        self.date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+        self.date = date(year=dEven // 10000, month=dEven //
+                         100 % 100, day=dEven % 100)
+
 
 @dataclass
 class InstrumentShareChange:
@@ -210,7 +230,9 @@ class InstrumentShareChange:
         self.total_shares_before = tsetmc_raw_data["numberOfShareOld"]
         self.total_shares_after = tsetmc_raw_data["numberOfShareNew"]
         dEven = tsetmc_raw_data["dEven"]
-        self.date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+        self.date = date(year=dEven // 10000, month=dEven //
+                         100 % 100, day=dEven % 100)
+
 
 @dataclass
 class BestLimitsHistoryRow(BestLimitsRow):
@@ -222,22 +244,27 @@ class BestLimitsHistoryRow(BestLimitsRow):
         self.row_number = tsetmc_raw_data["number"]
         self.reference_id = tsetmc_raw_data["refID"]
         hEven = tsetmc_raw_data["hEven"]
-        self.time = time(hour=hEven // 10000, minute=hEven // 100 % 100, second=hEven % 100)
-        super(BestLimitsHistoryRow, self).__init__(tsetmc_raw_data=tsetmc_raw_data, *args)
+        self.time = time(hour=hEven // 10000, minute=hEven //
+                         100 % 100, second=hEven % 100)
+        super(BestLimitsHistoryRow, self).__init__(
+            tsetmc_raw_data=tsetmc_raw_data, *args)
+
 
 @dataclass
 class IndexDaily:
     date: date = None
     min_value: float = None
     max_value: float = None
-    last_value: float = None 
+    last_value: float = None
 
     def __init__(self, tsetmc_raw_data):
         self.min_value = tsetmc_raw_data["xNivInuPbMresIbs"]
         self.max_value = tsetmc_raw_data["xNivInuPhMresIbs"]
         self.last_value = tsetmc_raw_data["xNivInuClMresIbs"]
         dEven = tsetmc_raw_data["dEven"]
-        self.date = date(year=dEven // 10000, month = dEven // 100 % 100, day=dEven % 100)
+        self.date = date(year=dEven // 10000, month=dEven //
+                         100 % 100, day=dEven % 100)
+
 
 @dataclass
 class InstrumentOptionInfo:
@@ -251,20 +278,23 @@ class InstrumentOptionInfo:
     b_factor: float = None
     c_factor: float = None
     underlying_tsetmc_code: str = None
-    
+
     def __init__(self, tsetmc_raw_data):
         self.tsetmc_code = tsetmc_raw_data["insCode"]
         self.open_positions = tsetmc_raw_data["buyOP"]
         self.exercise_price = tsetmc_raw_data["strikePrice"]
         endDate = tsetmc_raw_data["endDate"]
-        self.exercise_date = date(year=endDate // 10000, month=endDate // 100 % 100, day=endDate % 100)
+        self.exercise_date = date(
+            year=endDate // 10000, month=endDate // 100 % 100, day=endDate % 100)
         beginDate = tsetmc_raw_data["beginDate"]
-        self.begin_date = date(year=beginDate // 10000, month=beginDate // 100 % 100, day=beginDate % 100)
+        self.begin_date = date(year=beginDate // 10000,
+                               month=beginDate // 100 % 100, day=beginDate % 100)
         self.lot_size = tsetmc_raw_data["contractSize"]
         self.a_factor = tsetmc_raw_data["aFactor"]
         self.b_factor = tsetmc_raw_data["bFactor"]
         self.c_factor = tsetmc_raw_data["cFactor"]
         self.underlying_tsetmc_code = tsetmc_raw_data["uaInsCode"]
+
 
 @dataclass
 class PrimaryMarketOverview:
@@ -290,15 +320,16 @@ class PrimaryMarketOverview:
         self.index_last_value = tsetmc_raw_data["indexLastValue"]
         marketActivityDEven = tsetmc_raw_data["marketActivityDEven"]
         marketActivityHEven = tsetmc_raw_data["marketActivityHEven"]
-        self.datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
-                                        day=marketActivityDEven % 100, hour=marketActivityHEven // 10000, 
-                                        minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
+        self.datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100,
+                                 day=marketActivityDEven % 100, hour=marketActivityHEven // 10000,
+                                 minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
         self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
         self.trade_volume = tsetmc_raw_data["marketActivityQTotTran"]
         self.trade_num = tsetmc_raw_data["marketActivityZTotTran"]
         self.market_state = tsetmc_raw_data["marketState"]
         self.market_state_title = tsetmc_raw_data["marketStateTitle"]
         self.market_value = tsetmc_raw_data["marketValue"]
+
 
 @dataclass
 class SecondaryMarketOverview:
@@ -321,9 +352,9 @@ class SecondaryMarketOverview:
         self.index_last_value = tsetmc_raw_data["indexLastValue"]
         marketActivityDEven = tsetmc_raw_data["marketActivityDEven"]
         marketActivityHEven = tsetmc_raw_data["marketActivityHEven"]
-        self.datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100, 
-                                        day=marketActivityDEven % 100, hour=marketActivityHEven // 10000, 
-                                        minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
+        self.datetime = datetime(year=marketActivityDEven // 10000, month=marketActivityDEven // 100 % 100,
+                                 day=marketActivityDEven % 100, hour=marketActivityHEven // 10000,
+                                 minute=marketActivityHEven // 100 % 100, second=marketActivityHEven % 100)
         self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
         self.trade_volume = tsetmc_raw_data["marketActivityQTotTran"]
         self.trade_num = tsetmc_raw_data["marketActivityZTotTran"]
@@ -331,6 +362,7 @@ class SecondaryMarketOverview:
         self.market_state_title = tsetmc_raw_data["marketStateTitle"]
         self.market_value = tsetmc_raw_data["marketValue"]
         self.tertiary_market_value = tsetmc_raw_data["marketValueBase"]
+
 
 @dataclass
 class MarketWatchBestLimitsRow(BestLimitsRow):
@@ -345,12 +377,14 @@ class MarketWatchBestLimitsRow(BestLimitsRow):
         self.supply_price = tsetmc_raw_data["pmo"]
         self.id = tsetmc_raw_data["rid"]
 
-@dataclass 
+
+@dataclass
 class MarketWatchBestLimits:
     rows: list[MarketWatchBestLimitsRow] = None
 
     def __init__(self, tsetmc_raw_data):
         self.rows = [MarketWatchBestLimitsRow(x) for x in tsetmc_raw_data]
+
 
 @dataclass
 class MarketWatchTradeData(realtime.TradeCandle, instrument.InstrumentIdentification):
@@ -382,8 +416,11 @@ class MarketWatchTradeData(realtime.TradeCandle, instrument.InstrumentIdentifica
         self.trade_num = tsetmc_raw_data["ztt"]
         self.base_volume = tsetmc_raw_data["bv"]
         hEven = tsetmc_raw_data["hEven"]
-        self.last_trade_time = time(hour=hEven//10000, minute=hEven//100%100, second=hEven%100)
-        self.best_limits = MarketWatchBestLimits(tsetmc_raw_data=tsetmc_raw_data["blDs"])
+        self.last_trade_time = time(
+            hour=hEven//10000, minute=hEven//100 % 100, second=hEven % 100)
+        self.best_limits = MarketWatchBestLimits(
+            tsetmc_raw_data=tsetmc_raw_data["blDs"])
+
 
 @dataclass
 class MarketWatchClientTypeData(ClientType):
@@ -392,6 +429,7 @@ class MarketWatchClientTypeData(ClientType):
     def __init__(self, tsetmc_raw_data):
         self.tsetmc_code = tsetmc_raw_data["insCode"]
         super().__init__(tsetmc_raw_data)
+
 
 @dataclass
 class TseClientInstrumentIdentity(InstrumentIdentity):
@@ -414,18 +452,23 @@ class TseClientInstrumentIdentity(InstrumentIdentity):
             self.is_index = True
         self.market_code = int(tseclient_raw_data[9])
         last_change_date_raw = int(tseclient_raw_data[8])
-        self.last_change_date = date(year=last_change_date_raw//10000, month=last_change_date_raw//100%100, day=last_change_date_raw%100)
-        
+        self.last_change_date = date(year=last_change_date_raw//10000,
+                                     month=last_change_date_raw//100 % 100, day=last_change_date_raw % 100)
+
+
 class TsetmcScrapeError(MyProjectError):
-   """Tsetmc bad response status error."""
-   def __init__(self, *args, **kwargs):
+    """Tsetmc bad response status error."""
+
+    def __init__(self, *args, **kwargs):
         super().__init__(*args)
         self.status_code = kwargs.get('status_code')
+
 
 class TsetmcScraper():
     """
     This class fetches data from tsetmc.com, the official website for Tehran Stock Exchange market data.
     """
+
     def __init__(self, tsetmc_domain: str = "cdn.tsetmc.com"):
         self.tsetmc_domain = tsetmc_domain
         self.__client = httpx.AsyncClient(headers={
@@ -442,7 +485,8 @@ class TsetmcScraper():
     async def get_instrument_identity_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Instrument/GetInstrumentIdentity/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_instrument_identity(self, tsetmc_code: str, timeout: int = 3) -> InstrumentIdentity:
@@ -452,7 +496,8 @@ class TsetmcScraper():
     async def get_instrument_search_raw(self, search_value: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Instrument/GetInstrumentSearch/{search_value}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_instrument_search(self, search_value: str, timeout: int = 3) -> list[InstrumentSearchItem]:
@@ -462,9 +507,10 @@ class TsetmcScraper():
     async def get_closing_price_info_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClosingPrice/GetClosingPriceInfo/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-    
+
     async def get_closing_price_info(self, tsetmc_code: str, timeout: int = 3) -> ClosingPriceInfo:
         raw = await self.get_closing_price_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return ClosingPriceInfo(tsetmc_raw_data=raw["closingPriceInfo"])
@@ -472,9 +518,10 @@ class TsetmcScraper():
     async def get_instrument_info_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Instrument/GetInstrumentInfo/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-        
+
     async def get_instrument_info(self, tsetmc_code: str, timeout: int = 3) -> InstrumentInfo:
         raw = await self.get_instrument_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return InstrumentInfo(tsetmc_raw_data=raw["instrumentInfo"])
@@ -482,9 +529,10 @@ class TsetmcScraper():
     async def get_client_type_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClientType/GetClientType/{tsetmc_code}/1/0", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-        
+
     async def get_client_type(self, tsetmc_code: str, timeout: int = 3) -> ClientType:
         raw = await self.get_client_type_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return ClientType(tsetmc_raw_data=raw["clientType"])
@@ -492,7 +540,8 @@ class TsetmcScraper():
     async def get_best_limits_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/BestLimits/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_best_limits(self, tsetmc_code: str, timeout: int = 3) -> BestLimits:
@@ -502,7 +551,8 @@ class TsetmcScraper():
     async def get_closing_price_daily_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClosingPrice/GetClosingPriceDailyList/{tsetmc_code}/0", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_closing_price_daily_list(self, tsetmc_code: str, timeout: int = 3) -> list[ClosingPriceDaily]:
@@ -512,9 +562,10 @@ class TsetmcScraper():
     async def get_client_type_daily_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClientType/GetClientTypeHistory/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-        
+
     async def get_client_type_daily_list(self, tsetmc_code: str, timeout: int = 3) -> list[ClientTypeDaily]:
         raw = await self.get_client_type_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [ClientTypeDaily(tsetmc_raw_data=x) for x in raw["clientType"]][::-1]
@@ -522,9 +573,10 @@ class TsetmcScraper():
     async def get_trade_intraday_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Trade/GetTrade/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-    
+
     async def get_trade_intraday_list(self, tsetmc_code: str, timeout: int = 3) -> list[TradeIntraday]:
         raw = await self.get_trade_intraday_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [TradeIntraday(tsetmc_raw_data=x) for x in raw["trade"]]
@@ -532,9 +584,10 @@ class TsetmcScraper():
     async def get_price_adjustment_list_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClosingPrice/GetPriceAdjustList/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-        
+
     async def get_price_adjustment_list(self, tsetmc_code: str, timeout: int = 3) -> list[PriceAdjustment]:
         raw = await self.get_price_adjustment_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [PriceAdjustment(tsetmc_raw_data=x) for x in raw["priceAdjust"]]
@@ -542,9 +595,10 @@ class TsetmcScraper():
     async def get_instrument_share_change_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Instrument/GetInstrumentShareChange/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-        
+
     async def get_instrument_share_change(self, tsetmc_code: str, timeout: int = 3) -> list[InstrumentShareChange]:
         raw = await self.get_instrument_share_change_raw(tsetmc_code=tsetmc_code, timeout=timeout)
         return [InstrumentShareChange(tsetmc_raw_data=x) for x in raw["instrumentShareChange"]]
@@ -552,7 +606,8 @@ class TsetmcScraper():
     async def get_trade_intraday_hisory_list_raw(self, tsetmc_code: str, date: date, detailed: bool = True, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Trade/GetTradeHistory/{tsetmc_code}/{date.year}{date.month:02}{date.day:02}/{not detailed}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_trade_intraday_hisory_list(self, tsetmc_code: str, date: date, detailed: bool = True, timeout: int = 3) -> list[TradeIntraday]:
@@ -564,7 +619,8 @@ class TsetmcScraper():
     async def get_best_limits_intraday_history_list_raw(self, tsetmc_code: str, date: date, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/BestLimits/{tsetmc_code}/{date.year}{date.month:02}{date.day:02}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_best_limits_intraday_history_list(self, tsetmc_code: str, date: date, timeout: int = 3) -> list[BestLimitsHistoryRow]:
@@ -574,7 +630,8 @@ class TsetmcScraper():
     async def get_index_history_raw(self, tsetmc_code: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Index/GetIndexB2History/{tsetmc_code}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_index_history(self, tsetmc_code: str, timeout: int = 3) -> list[IndexDaily]:
@@ -584,7 +641,8 @@ class TsetmcScraper():
     async def get_instrument_option_info_raw(self, isin: str, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/Instrument/GetInstrumentOptionByInstrumentID/{isin}", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_instrument_option_info(self, isin: str, timeout: int = 3) -> InstrumentOptionInfo:
@@ -594,7 +652,8 @@ class TsetmcScraper():
     async def get_primary_market_overview_raw(self, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/MarketData/GetMarketOverview/1", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_primary_market_overview(self, timeout: int = 3) -> PrimaryMarketOverview:
@@ -604,7 +663,8 @@ class TsetmcScraper():
     async def get_secondary_market_overview_raw(self, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/MarketData/GetMarketOverview/2", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_secondary_market_overview(self, timeout: int = 3) -> SecondaryMarketOverview:
@@ -614,7 +674,8 @@ class TsetmcScraper():
     async def get_market_watch_raw(self, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClosingPrice/GetMarketWatch?market=0&paperTypes[0]=1&paperTypes[1]=2&paperTypes[2]=3&paperTypes[3]=4&paperTypes[4]=5&paperTypes[5]=6&paperTypes[6]=7&paperTypes[7]=8&paperTypes[8]=9&showTraded=false&withBestLimits=true&hEven=0&RefID=0", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
 
     async def get_market_watch(self, timeout: int = 3) -> list[MarketWatchTradeData]:
@@ -624,12 +685,14 @@ class TsetmcScraper():
     async def get_client_type_all_raw(self, timeout: int = 3) -> dict:
         r = await self.__client.get(f"api/ClientType/GetClientTypeAll", timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return json.loads(r.text)
-    
+
     async def get_client_type_all(self, timeout: int = 3) -> list[MarketWatchClientTypeData]:
         raw = await self.get_client_type_all_raw(timeout=timeout)
         return [MarketWatchClientTypeData(tsetmc_raw_data=x) for x in raw["clientTypeAllDto"]]
+
 
 class TseClientScraper():
     """
@@ -642,25 +705,28 @@ class TseClientScraper():
             "Host": "service.tsetmc.com",
             "SOAPAction": "http://tsetmc.com/Instrument",
             "accept": "text/xml",
-            "Content-type":"text/xml" 
+            "Content-type": "text/xml"
         }, base_url=TseClientScraper.base_address)
 
     async def __aenter__(self):
         return self
-    
+
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.__client.aclose()
-        
+
     async def get_instruments_list_raw(self, timeout: int = 3) -> str:
         xmlString = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">\r\n <soap:Body>\r\n <Instrument xmlns=\"http://tsetmc.com/\">\r\n <UserName>string</UserName>\r\n <Password>string</Password>\r\n <Flow>unsignedByte</Flow>\r\n </Instrument>\r\n </soap:Body>\r\n</soap:Envelope>"
-        http_content = xmlString.encode(encoding = 'UTF-8')
+        http_content = xmlString.encode(encoding='UTF-8')
         r = await self.__client.post(self.base_address, content=http_content, timeout=timeout)
         if r.status_code != 200:
-            raise TsetmcScrapeError(f"Bad response: [{r.status_code}]", status_code=r.status_code)
+            raise TsetmcScrapeError(
+                f"Bad response: [{r.status_code}]", status_code=r.status_code)
         return r.text
-    
+
     async def get_instruments_list(self, timeout: int = 3) -> list[TseClientInstrumentIdentity]:
         raw = await self.get_instruments_list_raw(timeout=timeout)
-        element = BeautifulSoup(raw, features="xml").findChild("InstrumentResult").text
-        processed = [TseClientInstrumentIdentity(x.split(",")) for x in element.split(";")]
+        element = BeautifulSoup(raw, features="xml").findChild(
+            "InstrumentResult").text
+        processed = [TseClientInstrumentIdentity(
+            x.split(",")) for x in element.split(";")]
         return [x for x in processed if not x.is_index], [x for x in processed if x.is_index]

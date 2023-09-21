@@ -2,9 +2,12 @@ from dataclasses import dataclass
 from tse_utils.models.enums import *
 from tse_utils.models import instrument
 from datetime import time, date, datetime
-import threading, logging, asyncio
+import threading
+import logging
+import asyncio
 from abc import ABC, abstractmethod
 from typing import Callable
+
 
 @dataclass
 class MicroTrade:
@@ -19,10 +22,12 @@ class MicroTrade:
     datetime: datetime = None
     htn: str = None
 
+
 class Order:
     """
     Holds data for a single order from a trader.
     """
+
     def __init__(self, oms_id, isin: str, side: TradeSide, quantity: int = None, price: int = None,
                  remaining_quantity: int = None, executed_quantity: int = None, state: OrderState = None,
                  client_id: str = None, hon: str = None, blocked_credit: int = None, creation_datetime: datetime = None,
@@ -62,6 +67,7 @@ class Order:
     def __str__(self) -> str:
         return f"{self.side}|{self.state}|{self.oms_id}|{self.isin}|P:{self.price},Q:{self.quantity}"
 
+
 @dataclass
 class PortfolioCash:
     free_balance: int = None
@@ -71,6 +77,7 @@ class PortfolioCash:
 
     def get_all_balance(self) -> int:
         return self.free_balance + self.blocked_balance
+
 
 @dataclass
 class PortfolioSecurity:
@@ -85,7 +92,8 @@ class PortfolioSecurity:
 
     def __str__(self) -> str:
         return f"{self.quantity} of {self.isin}"
-    
+
+
 class Portfolio:
 
     def __init__(self):
@@ -104,7 +112,7 @@ class Portfolio:
     def has_asset(self, isin: str) -> bool:
         with self._assets_lock:
             return any(x for x in self._assets if x.isin == isin)
-        
+
     def get_asset(self, isin: str) -> PortfolioSecurity:
         with self._assets_lock:
             return next((x for x in self._assets if x.isin == isin), None)
@@ -128,7 +136,7 @@ class Portfolio:
             self._assets.clear()
 
     def update_asset(self, isin: str, quantity: int, position_open_price: int = None,
-                    instrument_last_price: int = None, instrument_close_price: int = None) -> None:
+                     instrument_last_price: int = None, instrument_close_price: int = None) -> None:
         with self._assets_lock:
             asset = next((x for x in self._assets if x.isin == isin), None)
             if asset:
@@ -138,13 +146,13 @@ class Portfolio:
                 asset.instrument_last_price = instrument_last_price
             else:
                 self._assets.append(PortfolioSecurity(isin=isin, quantity=quantity, position_open_price=position_open_price,
-                                                      instrument_close_price=instrument_close_price, 
+                                                      instrument_close_price=instrument_close_price,
                                                       instrument_last_price=instrument_last_price))
-    
+
     def has_position(self, isin: str) -> bool:
         with self._positions_lock:
             return any(x for x in self._positions if x.isin == isin)
-        
+
     def get_position(self, isin: str) -> PortfolioSecurity:
         with self._positions_lock:
             return next((x for x in self._positions if x.isin == isin), None)
@@ -159,7 +167,8 @@ class Portfolio:
 
     def remove_position(self, isin: str) -> None:
         with self._positions_lock:
-            position = next((x for x in self._positions if x.isin == isin), None)
+            position = next(
+                (x for x in self._positions if x.isin == isin), None)
             if position:
                 self._positions.remove(position)
 
@@ -168,9 +177,10 @@ class Portfolio:
             self._positions.clear()
 
     def update_position(self, isin: str, quantity: int, position_open_price: int = None,
-                    instrument_last_price: int = None, instrument_close_price: int = None) -> None:
+                        instrument_last_price: int = None, instrument_close_price: int = None) -> None:
         with self._positions_lock:
-            position = next((x for x in self._positions if x.isin == isin), None)
+            position = next(
+                (x for x in self._positions if x.isin == isin), None)
             if position:
                 position.quantity = quantity
                 position.position_open_price = position_open_price
@@ -178,8 +188,9 @@ class Portfolio:
                 position.instrument_last_price = instrument_last_price
             else:
                 self._positions.append(PortfolioSecurity(isin=isin, quantity=quantity, position_open_price=position_open_price,
-                                                      instrument_close_price=instrument_close_price, 
-                                                      instrument_last_price=instrument_last_price))
+                                                         instrument_close_price=instrument_close_price,
+                                                         instrument_last_price=instrument_last_price))
+
 
 @dataclass
 class TraderIdentification:
@@ -201,19 +212,22 @@ class TraderIdentification:
     def __str__(self) -> str:
         return self.display_name if self.display_name else self.username
 
+
 @dataclass
 class TradingAPI:
     broker_title: str = None
     oms_title: str = None
-    oms_domain: str = None 
+    oms_domain: str = None
 
     def __str__(self) -> str:
         return f"{self.oms_title} - {self.broker_title}"
+
 
 class Trader(ABC):
     """
     Trader class holds the data for a single trader account and can be inheridated by classes specialized in training using a speicif OMS API.
     """
+
     def __init__(self, identification: TraderIdentification, api: TradingAPI, logger_name: str = None):
         self.identification = identification
         self.api = api
@@ -232,7 +246,8 @@ class Trader(ABC):
             await self.disconnect()
         except Exception as ex:
             self.logger.error("Disconnect failed while disposing object.")
-            self.logger.debug("Encountered {0} when trying to disconnect.".format(ex))
+            self.logger.debug(
+                "Encountered {0} when trying to disconnect.".format(ex))
 
     def __str__(self) -> str:
         return f"{str(self.identification)}@{self.api.broker_title}"
@@ -274,7 +289,7 @@ class Trader(ABC):
         pass
 
     @abstractmethod
-    async def connect_looper(self, interval: int = 3, max_trial = 10) -> None:
+    async def connect_looper(self, interval: int = 3, max_trial=10) -> None:
         """
         Recursively trying to login to the trader account
         """
@@ -288,7 +303,7 @@ class Trader(ABC):
         pass
 
     @abstractmethod
-    async def get_server_datetime(self)  -> datetime:
+    async def get_server_datetime(self) -> datetime:
         """
         Gets server datetime
         """
@@ -309,15 +324,14 @@ class Trader(ABC):
         pass
 
     @abstractmethod
-    async def order_send(side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
+    async def order_send(self, side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
                          validity: OrderValidity = OrderValidity.DAY, expiration_date: date = None):
         pass
 
     @abstractmethod
-    async def order_cancel(order: Order):
+    async def order_cancel(self, order: Order):
         pass
 
     @abstractmethod
-    async def order_edit(order: Order, quantity: int, price: int):
+    async def order_edit(self, order: Order, quantity: int, price: int):
         pass
-    
