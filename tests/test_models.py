@@ -1,6 +1,6 @@
 import unittest
+from datetime import datetime, date
 from tse_utils.models import trader, instrument, realtime, enums
-from datetime import datetime, date, time
 
 
 class TestModels(unittest.TestCase):
@@ -128,14 +128,14 @@ class TestModels(unittest.TestCase):
             async def subscribe_instruments_list(self, instruments: list[instrument.Instrument]):
                 pass
 
-            async def order_send(side: enums.TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
+            async def order_send(self, side: enums.TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
                                  validity: enums.OrderValidity = enums.OrderValidity.DAY, expiration_date: date = None):
                 pass
 
-            async def order_cancel(order: trader.Order):
+            async def order_cancel(self, order: trader.Order):
                 pass
 
-            async def order_edit(order: trader.Order, quantity: int, price: int):
+            async def order_edit(self, order: trader.Order, quantity: int, price: int):
                 pass
 
         sample_trader = ImplementedTrader(

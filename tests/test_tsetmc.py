@@ -43,7 +43,8 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         async with TsetmcScraper() as tsetmc:
             search_result = await tsetmc.get_instrument_search(self.sample_instrument.identification.ticker)
             self.assertTrue(any(
-                [x.tsetmc_code == self.sample_instrument.identification.tsetmc_code for x in search_result]))
+                x.tsetmc_code == self.sample_instrument.identification.tsetmc_code for x in search_result
+            ))
 
     async def test_get_closing_price_info_raw(self):
         async with TsetmcScraper() as tsetmc:
@@ -268,10 +269,10 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
 
     async def test_tse_client_get_instruments_list(self):
         async with TseClientScraper() as tse_client:
-            instrument, _ = await tse_client.get_instruments_list()
-            self.assertTrue(len(instrument) > 0)
+            instruments, _ = await tse_client.get_instruments_list()
+            self.assertTrue(len(instruments) > 0)
             self.assertTrue(any(x.tsetmc_code == self.sample_instrument.identification.tsetmc_code and
-                                x.isin == self.sample_instrument.identification.isin for x in instrument))
+                                x.isin == self.sample_instrument.identification.isin for x in instruments))
 
 
 if __name__ == '__main__':
