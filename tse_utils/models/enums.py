@@ -51,7 +51,7 @@ class TraderConnectionState(Enum):
     LOGGED_OUT = "خارج شده"
 
     def is_stable(self) -> bool:
-        return self == TraderConnectionState.NO_LOGIN or self == TraderConnectionState.CONNECTED or self == TraderConnectionState.LOGGED_OUT
+        return self in (TraderConnectionState.NO_LOGIN, TraderConnectionState.CONNECTED, TraderConnectionState.LOGGED_OUT)
 
     def can_request_connect(self) -> bool:
-        return self == TraderConnectionState.NO_LOGIN or self == TraderConnectionState.LOGGED_OUT
+        return self in (TraderConnectionState.NO_LOGIN, TraderConnectionState.LOGGED_OUT)

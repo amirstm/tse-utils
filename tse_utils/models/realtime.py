@@ -16,9 +16,11 @@ class OrderBookRow():
     supply_price: int = None
 
     def __str__(self):
-        return f"{self.supply_num} {self.supply_volume} {self.supply_price} | {self.demand_price} {self.demand_volume} {self.demand_num}"
+        return f"{self.supply_num} {self.supply_volume} {self.supply_price} | \
+            {self.demand_price} {self.demand_volume} {self.demand_num}"
 
 
+@dataclass
 class OrderBook():
     """
     Orderbook contains the top n rows of an instrument's orders on both sides.
@@ -33,7 +35,8 @@ class OrderBook():
 @dataclass
 class ClientType():
     """
-    ClientType holds data used to separate the share of the natural investors from the legal ones from trades
+    ClientType holds data used to separate the share of the natural investors 
+    from the legal ones on trades
     """
     legal_buy_num: int = None
     legal_buy_volume: int = None

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
+from datetime import date
 from tse_utils.models.enums import Nsc
-from tse_utils.models.realtime import *
-from datetime import time, date, datetime
+from tse_utils.models.realtime import OrderBook, ClientType, TradeCandle, DeepOrderBook
 
 
 @dataclass
@@ -91,17 +91,15 @@ class IndexIdentification:
         return f"{self.persian_name} [{self.tsetmc_code}]"
 
 
+@dataclass
 class Index:
     """
     Holds all available data for a specific index.
     """
-
-    def __init__(self, identification: IndexIdentification, min_value: int = None, max_value: int = None,
-                 last_value: int = None):
-        self.identification = identification
-        self.min_value = min_value
-        self.max_value = max_value
-        self.last_value = last_value
+    identification: IndexIdentification
+    min_value: int
+    max_value: int
+    last_value: int
 
     def __str__(self) -> str:
         return f"{self.identification}"

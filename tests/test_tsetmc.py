@@ -1,9 +1,7 @@
 import unittest
-import sys
-import asyncio
+from datetime import datetime, date, time
 from tse_utils.tsetmc import TsetmcScraper, TseClientScraper
 from tse_utils.models import instrument
-from datetime import datetime, date, time
 
 
 class TestTSETMC(unittest.IsolatedAsyncioTestCase):

@@ -1,12 +1,11 @@
 from dataclasses import dataclass
-from tse_utils.models.enums import *
-from tse_utils.models import instrument
-from datetime import time, date, datetime
+from datetime import date, datetime
 import threading
 import logging
-import asyncio
 from abc import ABC, abstractmethod
 from typing import Callable
+from tse_utils.models.enums import TradeSide, TraderConnectionState, OrderLock, OrderState, OrderValidity
+from tse_utils.models import instrument
 
 
 @dataclass
@@ -256,13 +255,13 @@ class Trader(ABC):
         with self._orders_lock:
             return next((x for x in self._orders if x.oms_id == oms_id), None)
 
-    def get_order_custom(self, filter: Callable[[Order], bool]) -> Order:
+    def get_order_custom(self, filter_func: Callable[[Order], bool]) -> Order:
         with self._orders_lock:
-            return next((x for x in self._orders if filter(x)), None)
+            return next((x for x in self._orders if filter_func(x)), None)
 
-    def get_orders(self, filter: Callable[[Order], bool] = lambda x: True) -> list[Order]:
+    def get_orders(self, filter_func: Callable[[Order], bool] = lambda x: True) -> list[Order]:
         with self._orders_lock:
-            return [x for x in self._orders if filter(x)]
+            return [x for x in self._orders if filter_func(x)]
 
     def remove_order(self, oms_id) -> None:
         with self._orders_lock:
@@ -286,52 +285,54 @@ class Trader(ABC):
         """
         Does a single attempt on logging in to the trader account
         """
-        pass
 
     @abstractmethod
     async def connect_looper(self, interval: int = 3, max_trial=10) -> None:
         """
         Recursively trying to login to the trader account
         """
-        pass
 
     @abstractmethod
     async def disconnect(self) -> None:
         """
         Logs of from the trader account
         """
-        pass
 
     @abstractmethod
     async def get_server_datetime(self) -> datetime:
         """
         Gets server datetime
         """
-        pass
 
     @abstractmethod
     async def pull_trader_data(self):
         """
         Fetches client data from OMS using a pull request
         """
-        pass
 
     @abstractmethod
     async def subscribe_instruments_list(self, instruments: list[instrument.Instrument]):
         """
         Subscribes the instruments on the OMS pusher to get their realtime data
         """
-        pass
 
     @abstractmethod
-    async def order_send(self, side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
-                         validity: OrderValidity = OrderValidity.DAY, expiration_date: date = None):
-        pass
+    async def order_send(
+        self, side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
+        validity: OrderValidity = OrderValidity.DAY, expiration_date: date = None
+    ):
+        """
+        Used for sending a new order to the OMS
+        """
 
     @abstractmethod
     async def order_cancel(self, order: Order):
-        pass
+        """
+        Used for canceling an active order
+        """
 
     @abstractmethod
     async def order_edit(self, order: Order, quantity: int, price: int):
-        pass
+        """
+        Used for editing an active order
+        """

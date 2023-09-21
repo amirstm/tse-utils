@@ -1,6 +1,4 @@
 import unittest
-import sys
-import asyncio
 from tse_utils.models import trader, instrument, realtime, enums
 from datetime import datetime, date, time
 
