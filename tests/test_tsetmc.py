@@ -7,7 +7,7 @@ from tse_utils.models import instrument
 
 
 class TestTSETMC(unittest.IsolatedAsyncioTestCase):
-    retries_on_timeout = 3
+    retries_on_timeout = 5
 
     def __init__(self, *args, **kwargs):
         self.sample_instrument = instrument.Instrument(
