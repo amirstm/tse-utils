@@ -73,8 +73,10 @@ class ClosingPriceInfo(realtime.TradeCandle):
                            ["cEtaval"]).replace(" ", "")]
         ltd_date = tsetmc_raw_data["finalLastDate"]
         ltd_time = tsetmc_raw_data["hEven"]
-        self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
-                                            hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
+        self.last_trade_datetime = datetime(
+            year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
+            hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100
+        )
 
 
 @dataclass
@@ -157,8 +159,10 @@ class ClosingPriceDaily(ClosingPriceInfo):
         self.trade_num = tsetmc_raw_data["zTotTran"]
         ltd_date = tsetmc_raw_data["dEven"]
         ltd_time = tsetmc_raw_data["hEven"]
-        self.last_trade_datetime = datetime(year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
-                                            hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100)
+        self.last_trade_datetime = datetime(
+            year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
+            hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100
+        )
 
 
 @dataclass
@@ -358,9 +362,11 @@ class SecondaryMarketOverview:
         self.index_last_value = tsetmc_raw_data["indexLastValue"]
         market_activity_deven = tsetmc_raw_data["marketActivityDEven"]
         market_activity_heven = tsetmc_raw_data["marketActivityHEven"]
-        self.datetime = datetime(year=market_activity_deven // 10000, month=market_activity_deven // 100 % 100,
-                                 day=market_activity_deven % 100, hour=market_activity_heven // 10000,
-                                 minute=market_activity_heven // 100 % 100, second=market_activity_heven % 100)
+        self.datetime = datetime(
+            year=market_activity_deven // 10000, month=market_activity_deven // 100 % 100,
+            day=market_activity_deven % 100, hour=market_activity_heven // 10000,
+            minute=market_activity_heven // 100 % 100, second=market_activity_heven % 100
+        )
         self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
         self.trade_volume = tsetmc_raw_data["marketActivityQTotTran"]
         self.trade_num = tsetmc_raw_data["marketActivityZTotTran"]
@@ -458,8 +464,11 @@ class TseClientInstrumentIdentity(InstrumentIdentity):
             self.is_index = True
         self.market_code = int(tseclient_raw_data[9])
         last_change_date_raw = int(tseclient_raw_data[8])
-        self.last_change_date = date(year=last_change_date_raw//10000,
-                                     month=last_change_date_raw//100 % 100, day=last_change_date_raw % 100)
+        self.last_change_date = date(
+            year=last_change_date_raw//10000,
+            month=last_change_date_raw//100 % 100,
+            day=last_change_date_raw % 100
+        )
 
 
 class TsetmcScrapeError(MyProjectError):
@@ -472,13 +481,16 @@ class TsetmcScrapeError(MyProjectError):
 
 class TsetmcScraper():
     """
-    This class fetches data from tsetmc.com, the official website for Tehran Stock Exchange market data.
+    This class fetches data from tsetmc.com, the official website 
+    for Tehran Stock Exchange market data.
     """
 
     def __init__(self, tsetmc_domain: str = "cdn.tsetmc.com"):
         self.tsetmc_domain = tsetmc_domain
         self.__client = httpx.AsyncClient(headers={
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.114 Safari/537.36",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
+                AppleWebKit/537.36 (KHTML, like Gecko) \
+                Chrome/89.0.4389.114 Safari/537.36",
             "accept": "application/json, text/plain, */*"
         }, base_url=f"http://{tsetmc_domain}/")
 
