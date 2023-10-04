@@ -382,7 +382,7 @@ class SecondaryMarketOverview:
 
 @dataclass
 class MarketWatchBestLimitsRow(BestLimitsRow):
-    id: int = None
+    row_id: int = None
 
     def __init__(self, tsetmc_raw_data):
         self.demand_num = tsetmc_raw_data["zmd"]
@@ -391,7 +391,7 @@ class MarketWatchBestLimitsRow(BestLimitsRow):
         self.supply_num = tsetmc_raw_data["zmo"]
         self.supply_volume = tsetmc_raw_data["qmo"]
         self.supply_price = tsetmc_raw_data["pmo"]
-        self.id = tsetmc_raw_data["rid"]
+        self.row_id = tsetmc_raw_data["rid"]
 
 
 @dataclass
@@ -528,7 +528,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> InstrumentIdentity:
-        raw = await self.get_instrument_identity_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_instrument_identity_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return InstrumentIdentity(tsetmc_raw_data=raw["instrumentIdentity"])
 
     async def get_instrument_search_raw(
@@ -550,7 +553,10 @@ class TsetmcScraper():
             search_value: str,
             timeout: int = 3
     ) -> list[InstrumentSearchItem]:
-        raw = await self.get_instrument_search_raw(search_value=search_value, timeout=timeout)
+        raw = await self.get_instrument_search_raw(
+            search_value=search_value,
+            timeout=timeout
+        )
         return [InstrumentSearchItem(x) for x in raw["instrumentSearch"]]
 
     async def get_closing_price_info_raw(
@@ -572,7 +578,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> ClosingPriceInfo:
-        raw = await self.get_closing_price_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_closing_price_info_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return ClosingPriceInfo(tsetmc_raw_data=raw["closingPriceInfo"])
 
     async def get_instrument_info_raw(
@@ -594,7 +603,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> InstrumentInfo:
-        raw = await self.get_instrument_info_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_instrument_info_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return InstrumentInfo(tsetmc_raw_data=raw["instrumentInfo"])
 
     async def get_client_type_raw(
@@ -616,7 +628,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> ClientType:
-        raw = await self.get_client_type_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_client_type_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return ClientType(tsetmc_raw_data=raw["clientType"])
 
     async def get_best_limits_raw(
@@ -638,7 +653,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> BestLimits:
-        raw = await self.get_best_limits_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_best_limits_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return BestLimits(tsetmc_raw_data=raw["bestLimits"])
 
     async def get_closing_price_daily_list_raw(
@@ -660,7 +678,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> list[ClosingPriceDaily]:
-        raw = await self.get_closing_price_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_closing_price_daily_list_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return [ClosingPriceDaily(tsetmc_raw_data=x) for x in raw["closingPriceDaily"]][::-1]
 
     async def get_client_type_daily_list_raw(
@@ -682,7 +703,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> list[ClientTypeDaily]:
-        raw = await self.get_client_type_daily_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_client_type_daily_list_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return [ClientTypeDaily(tsetmc_raw_data=x) for x in raw["clientType"]][::-1]
 
     async def get_trade_intraday_list_raw(
@@ -704,7 +728,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> list[TradeIntraday]:
-        raw = await self.get_trade_intraday_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_trade_intraday_list_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return [TradeIntraday(tsetmc_raw_data=x) for x in raw["trade"]]
 
     async def get_price_adjustment_list_raw(
@@ -726,7 +753,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> list[PriceAdjustment]:
-        raw = await self.get_price_adjustment_list_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_price_adjustment_list_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return [PriceAdjustment(tsetmc_raw_data=x) for x in raw["priceAdjust"]]
 
     async def get_instrument_share_change_raw(
@@ -748,7 +778,10 @@ class TsetmcScraper():
             tsetmc_code: str,
             timeout: int = 3
     ) -> list[InstrumentShareChange]:
-        raw = await self.get_instrument_share_change_raw(tsetmc_code=tsetmc_code, timeout=timeout)
+        raw = await self.get_instrument_share_change_raw(
+            tsetmc_code=tsetmc_code,
+            timeout=timeout
+        )
         return [InstrumentShareChange(tsetmc_raw_data=x) for x in raw["instrumentShareChange"]]
 
     async def get_trade_intraday_hisory_list_raw(

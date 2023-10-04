@@ -1,7 +1,18 @@
+"""
+Gathers the classes from realtime and other instruments data \
+to build complete instrument classes
+"""
 from dataclasses import dataclass
+from abc import ABC
 from datetime import date
-from tse_utils.models.enums import Nsc
-from tse_utils.models.realtime import OrderBook, ClientType, TradeCandle, DeepOrderBook
+from tse_utils.models.realtime import (
+    OrderBook,
+    ClientType,
+    TradeCandle,
+    DeepOrderBook,
+    OrderLimitations,
+    BigQuantityParams
+)
 
 
 @dataclass
@@ -9,52 +20,61 @@ class InstrumentIdentification:
     """
     Holds the identification for instruments.
     """
-    id: int = None
+    # pylint: disable=invalid-name
     isin: str = None
     tsetmc_code: str = None
     ticker: str = None
     name_persian: str = None
     name_english: str = None
+    is_obsolete: bool = False
 
     def __str__(self):
         return f"{self.ticker} [{self.isin}]"
 
 
-class Instrument:
-    """
-    Holds all available data for a specific tradable instrument.
-    """
+@dataclass
+class InstrumentRealtime(ABC):
+    """Interface for Instrument class that contains the realtime data"""
+    orderbook: OrderBook = None
+    client_type: ClientType = None
+    intraday_trade_candle: TradeCandle = None
+    deep_orderbook: DeepOrderBook = None
 
-    def __init__(self, identification: InstrumentIdentification, max_price_threshold: int = None, min_price_threshold: int = None,
-                 max_buy_order_quantity_threshold: int = None, max_sell_order_quantity_threshold: int = None, base_volume: int = 1,
-                 lot_size: int = 1, total_shares: int = None, price_tick: int = 1, is_obsolete: bool = False, nsc: Nsc = None):
-        self.identification = identification
-        self.max_price_threshold = max_price_threshold
-        self.min_price_threshold = min_price_threshold
-        self.max_buy_order_quantity_threshold = max_buy_order_quantity_threshold
-        self.max_sell_order_quantity_threshold = max_sell_order_quantity_threshold
-        self.base_volume = base_volume
-        self.lot_size = lot_size
-        self.total_shares = total_shares
-        self.price_tick = price_tick
-        self.is_obsolete = is_obsolete
-        self.nsc = nsc
+    def __init__(self):
         self.orderbook = OrderBook()
         self.client_type = ClientType()
         self.intraday_trade_candle = TradeCandle()
         self.deep_orderbook = DeepOrderBook()
 
+
+class Instrument(InstrumentRealtime):
+    """
+    Holds all available data for a specific tradable instrument.
+    """
+
+    def __init__(
+        self,
+        identification: InstrumentIdentification,
+    ):
+        self.identification: InstrumentIdentification = identification
+        self.big_quantity_params: BigQuantityParams = BigQuantityParams()
+        self.trade_limitations: OrderLimitations = OrderLimitations()
+        super(InstrumentRealtime, self).__init__()
+
     def ticker_with_tsetmc_hyperlink(self) -> str:
         """
         Returns an HTML element containing a hyperlink to the TSETMC page for instrument.
         """
-        return f"<a href=\"http://www.tsetmc.com/Loader.aspx?ParTree=151311&i={self.identification.tsetmc_code}\">{self.identification.ticker}</a>"
+        return f"<a href=\"http://www.tsetmc.com/Loader.aspx?ParTree=151311\
+            &i={self.identification.tsetmc_code}\">{self.identification.ticker}</a>"
 
     def has_buy_queue(self) -> bool:
-        return self.orderbook.rows[0].demand_price == self.max_price_threshold
+        """Checks if instrument has a queue on the buy side"""
+        return self.orderbook.rows[0].demand_price == self.trade_limitations.max_price_threshold
 
     def has_sell_queue(self) -> bool:
-        return self.orderbook.rows[0].supply_price == self.min_price_threshold
+        """Checks if instrument has a queue on the sell side"""
+        return self.orderbook.rows[0].supply_price == self.trade_limitations.min_price_threshold
 
     def __str__(self):
         return str(self.identification)
@@ -71,8 +91,15 @@ class DerivativeInstrument(Instrument):
 
 
 class OptionInstrument(DerivativeInstrument):
+    """Holds data for option contract instruments"""
 
-    def __init__(self, exercise_date: date, exercise_price: int, lot_size: int = None, **kwargs):
+    def __init__(
+            self,
+            exercise_date: date,
+            exercise_price: int,
+            lot_size: int = None,
+            **kwargs
+    ):
         self.exercise_date = exercise_date
         self.exercise_price = exercise_price
         self.lot_size = lot_size
