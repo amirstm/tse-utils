@@ -33,7 +33,7 @@ class OrderState(Enum):
         return self == OrderState.ACTIVE
 
 
-class OrderValidity(Enum):
+class OrderValidityType(Enum):
     """Validity type for trader orders"""
     DAY = "روز"
     GOOD_TILL_CANCEL = "معتبر تا لغو"

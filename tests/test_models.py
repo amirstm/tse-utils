@@ -129,7 +129,7 @@ class TestModels(unittest.TestCase):
                 pass
 
             async def order_send(self, side: enums.TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
-                                 validity: enums.OrderValidity = enums.OrderValidity.DAY, expiration_date: date = None):
+                                 validity: enums.OrderValidityType = enums.OrderValidityType.DAY, expiration_date: date = None):
                 pass
 
             async def order_cancel(self, order: trader.Order):

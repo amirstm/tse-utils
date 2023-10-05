@@ -14,7 +14,7 @@ from tse_utils.models.enums import (
     TraderConnectionState,
     OrderLock,
     OrderState,
-    OrderValidity
+    OrderValidityType
 )
 from tse_utils.models import instrument
 
@@ -33,7 +33,49 @@ class MicroTrade:
     htn: str = None
 
 
-class Order:
+@dataclass
+class OrderIdentifier:
+    """Holds the identifiers of an Order"""
+    oms_id: str | int
+    isin: str
+    side: TradeSide
+    client_id: str = None
+    """
+    client_id is used for mapping the order on the OMS side with the one sent by a client
+    """
+    hon: str = None
+    """
+    hon identifies the position of order in the market kernel
+    """
+
+
+@dataclass
+class OrderStatus:
+    """Contains both OrderState and OrderLock"""
+    state: OrderState = None
+    lock: OrderLock = None
+
+
+@dataclass
+class OrderQuantity:
+    """Holds all quantity information for an order"""
+    quantity: int = None
+    remaining_quantity: int = None
+    executed_quantity: int = None
+
+
+@dataclass
+class OrderValidity:
+    """Contains validity type of order and expiration date, if appropriate"""
+    validity_type: OrderValidityType = None
+    creation_datetime: datetime = None
+    expiration_date: date = None
+    """
+    expiration_date is used for orders validity of which are GOOD_TILL_DATE
+    """
+
+
+class Order(OrderIdentifier, OrderStatus, OrderQuantity, OrderValidity):
     """
     Holds data for a single order from a trader.
     """
@@ -43,40 +85,17 @@ class Order:
         oms_id,
         isin: str,
         side: TradeSide,
-        quantity: int = None,
-        price: int = None,
-        remaining_quantity: int = None,
-        executed_quantity: int = None,
-        state: OrderState = None,
-        client_id: str = None,
-        hon: str = None,
-        blocked_credit: int = None,
-        creation_datetime: datetime = None,
-        validity: OrderValidity = None,
-        expiration_date: date = None,
-        lock: OrderLock = None
     ):
-        self.oms_id = oms_id
-        self.isin = isin
-        self.side = side
-        self.quantity = quantity
-        self.price = price
-        self.remaining_quantity = remaining_quantity
-        self.executed_quantity = executed_quantity
-        self.state = state
-        """
-        client_id is used for mapping the order on the OMS side with the one sent by a client.
-        """
-        self.client_id = client_id
-        self.hon = hon
-        self.blocked_credit = blocked_credit
-        self.creation_datetime = creation_datetime
-        self.validity = validity
-        """
-        expiration_date is used for orders validity of which are GOOD_TILL_DATE
-        """
-        self.expiration_date = expiration_date
-        self.lock = lock
+        super(OrderIdentifier, self).__init__(
+            oms_id=oms_id,
+            side=side,
+            isin=isin
+        )
+        super(OrderStatus, self).__init__()
+        super(OrderQuantity, self).__init__()
+        super(OrderValidity, self).__init__()
+        self.price: int = None
+        self.blocked_credit: int = None
         self._trades: list[MicroTrade] = []
         self._trades_lock: threading.Lock = threading.Lock()
 
@@ -403,7 +422,7 @@ class Trader(ABC):
     @abstractmethod
     async def order_send(
         self, side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
-        validity: OrderValidity = OrderValidity.DAY, expiration_date: date = None
+        validity: OrderValidityType = OrderValidityType.DAY, expiration_date: date = None
     ):
         """
         Used for sending a new order to the OMS
