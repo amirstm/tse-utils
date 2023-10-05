@@ -32,7 +32,9 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    identity = await tsetmc.get_instrument_identity_raw(self.sample_instrument.identification.tsetmc_code)
+                    identity = await tsetmc.get_instrument_identity_raw(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertEqual(identity["instrumentIdentity"]["instrumentID"],
                                      self.sample_instrument.identification.isin)
             except Exception as e:

@@ -59,7 +59,7 @@ class OrderStatus:
 @dataclass
 class OrderQuantity:
     """Holds all quantity information for an order"""
-    quantity: int = None
+    quantity: int
     remaining_quantity: int = None
     executed_quantity: int = None
 
@@ -80,21 +80,30 @@ class Order(OrderIdentifier, OrderStatus, OrderQuantity, OrderValidity):
     Holds data for a single order from a trader.
     """
 
+    # pylint: disable=too-many-arguments
+    # The following 6 parameters are the bare minimums \
+    # with which an order is identified
     def __init__(
         self,
         oms_id,
         isin: str,
         side: TradeSide,
+        quantity: int,
+        price: int
     ):
-        super(OrderIdentifier, self).__init__(
+        OrderIdentifier.__init__(
+            self=self,
             oms_id=oms_id,
             side=side,
             isin=isin
         )
-        super(OrderStatus, self).__init__()
-        super(OrderQuantity, self).__init__()
-        super(OrderValidity, self).__init__()
-        self.price: int = None
+        OrderStatus.__init__(self=self)
+        OrderQuantity.__init__(
+            self=self,
+            quantity=quantity
+        )
+        OrderValidity.__init__(self=self)
+        self.price: int = price
         self.blocked_credit: int = None
         self._trades: list[MicroTrade] = []
         self._trades_lock: threading.Lock = threading.Lock()
