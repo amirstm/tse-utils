@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime, date, time
 import httpx
 from bs4 import BeautifulSoup
-from tse_utils.exceptions import MyProjectError
 from tse_utils.models.enums import Nsc
 from tse_utils.models import realtime, instrument
 

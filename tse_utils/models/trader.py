@@ -1,10 +1,21 @@
+"""
+This model contains classes that can be used as interfaces for \
+implementing the trader classes in the future. Each trader instance \
+is responsible for a single account in a specific broker and OMS.
+"""
 from dataclasses import dataclass
 from datetime import date, datetime
 import threading
 import logging
 from abc import ABC, abstractmethod
 from typing import Callable
-from tse_utils.models.enums import TradeSide, TraderConnectionState, OrderLock, OrderState, OrderValidity
+from tse_utils.models.enums import (
+    TradeSide,
+    TraderConnectionState,
+    OrderLock,
+    OrderState,
+    OrderValidity
+)
 from tse_utils.models import instrument
 
 
@@ -27,10 +38,24 @@ class Order:
     Holds data for a single order from a trader.
     """
 
-    def __init__(self, oms_id, isin: str, side: TradeSide, quantity: int = None, price: int = None,
-                 remaining_quantity: int = None, executed_quantity: int = None, state: OrderState = None,
-                 client_id: str = None, hon: str = None, blocked_credit: int = None, creation_datetime: datetime = None,
-                 validity: OrderValidity = None, expiration_date: date = None, lock: OrderLock = None):
+    def __init__(
+        self,
+        oms_id,
+        isin: str,
+        side: TradeSide,
+        quantity: int = None,
+        price: int = None,
+        remaining_quantity: int = None,
+        executed_quantity: int = None,
+        state: OrderState = None,
+        client_id: str = None,
+        hon: str = None,
+        blocked_credit: int = None,
+        creation_datetime: datetime = None,
+        validity: OrderValidity = None,
+        expiration_date: date = None,
+        lock: OrderLock = None
+    ):
         self.oms_id = oms_id
         self.isin = isin
         self.side = side
@@ -64,7 +89,8 @@ class Order:
             return self._trades.copy()
 
     def __str__(self) -> str:
-        return f"{self.side}|{self.state}|{self.oms_id}|{self.isin}|P:{self.price},Q:{self.quantity}"
+        return f"{self.side}|{self.state}|{self.oms_id}|\
+            {self.isin}|P:{self.price},Q:{self.quantity}"
 
 
 @dataclass
@@ -103,7 +129,8 @@ class Portfolio:
         self._assets: list[PortfolioSecurity] = []
         self._assets_lock = threading.Lock()
         """
-        The positions list includes instruments in which having a net short position is possible, such as options and futures.
+        The positions list includes instruments in which \
+        having a net short position is possible, such as options and futures.
         """
         self._positions: list[PortfolioSecurity] = []
         self._positions_lock = threading.Lock()
@@ -134,8 +161,14 @@ class Portfolio:
         with self._assets_lock:
             self._assets.clear()
 
-    def update_asset(self, isin: str, quantity: int, position_open_price: int = None,
-                     instrument_last_price: int = None, instrument_close_price: int = None) -> None:
+    def update_asset(
+            self,
+            isin: str,
+            quantity: int,
+            position_open_price: int = None,
+            instrument_last_price: int = None,
+            instrument_close_price: int = None
+    ) -> None:
         with self._assets_lock:
             asset = next((x for x in self._assets if x.isin == isin), None)
             if asset:
@@ -144,9 +177,14 @@ class Portfolio:
                 asset.instrument_close_price = instrument_close_price
                 asset.instrument_last_price = instrument_last_price
             else:
-                self._assets.append(PortfolioSecurity(isin=isin, quantity=quantity, position_open_price=position_open_price,
-                                                      instrument_close_price=instrument_close_price,
-                                                      instrument_last_price=instrument_last_price))
+                self._assets.append(
+                    PortfolioSecurity(
+                        isin=isin,
+                        quantity=quantity,
+                        position_open_price=position_open_price,
+                        instrument_close_price=instrument_close_price,
+                        instrument_last_price=instrument_last_price
+                    ))
 
     def has_position(self, isin: str) -> bool:
         with self._positions_lock:
@@ -175,8 +213,14 @@ class Portfolio:
         with self._positions_lock:
             self._positions.clear()
 
-    def update_position(self, isin: str, quantity: int, position_open_price: int = None,
-                        instrument_last_price: int = None, instrument_close_price: int = None) -> None:
+    def update_position(
+            self,
+            isin: str,
+            quantity: int,
+            position_open_price: int = None,
+            instrument_last_price: int = None,
+            instrument_close_price: int = None
+    ) -> None:
         with self._positions_lock:
             position = next(
                 (x for x in self._positions if x.isin == isin), None)
@@ -186,9 +230,14 @@ class Portfolio:
                 position.instrument_close_price = instrument_close_price
                 position.instrument_last_price = instrument_last_price
             else:
-                self._positions.append(PortfolioSecurity(isin=isin, quantity=quantity, position_open_price=position_open_price,
-                                                         instrument_close_price=instrument_close_price,
-                                                         instrument_last_price=instrument_last_price))
+                self._positions.append(
+                    PortfolioSecurity(
+                        isin=isin,
+                        quantity=quantity,
+                        position_open_price=position_open_price,
+                        instrument_close_price=instrument_close_price,
+                        instrument_last_price=instrument_last_price
+                    ))
 
 
 @dataclass
@@ -224,10 +273,17 @@ class TradingAPI:
 
 class Trader(ABC):
     """
-    Trader class holds the data for a single trader account and can be inheridated by classes specialized in training using a speicif OMS API.
+    Trader class holds the data for a single trader account \
+    and can be inheridated by classes specialized in training \
+    using a specific OMS API.
     """
 
-    def __init__(self, identification: TraderIdentification, api: TradingAPI, logger_name: str = None):
+    def __init__(
+            self,
+            identification: TraderIdentification,
+            api: TradingAPI,
+            logger_name: str = None
+    ):
         self.identification = identification
         self.api = api
         self.logger = logging.getLogger(logger_name)
@@ -278,7 +334,11 @@ class Trader(ABC):
             self._orders.append(order)
 
     def get_subscribed_instrument(self, isin: str = None):
-        return next((x for x in self._subscribed_instruments if x.identification.isin == isin), None)
+        return next((
+            x
+            for x in self._subscribed_instruments
+            if x.identification.isin == isin
+        ), None)
 
     @abstractmethod
     async def connect(self) -> None:
