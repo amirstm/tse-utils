@@ -81,10 +81,12 @@ class Order:
         self._trades_lock: threading.Lock = threading.Lock()
 
     def add_trade(self, trade: MicroTrade) -> None:
+        """Add new trade to the list of order trades"""
         with self._trades_lock:
             self._trades.append(trade)
 
     def get_trades(self) -> list[MicroTrade]:
+        """Get a copy of the order's trades list"""
         with self._trades_lock:
             return self._trades.copy()
 
@@ -95,17 +97,20 @@ class Order:
 
 @dataclass
 class PortfolioCash:
+    """Holds the cash and credit in an account's portfolio"""
     free_balance: int = None
     blocked_balance: int = None
     accounting_remain: int = None
     credit_limit: int = None
 
     def get_all_balance(self) -> int:
+        """Get net balance of the account (without credit)"""
         return self.free_balance + self.blocked_balance
 
 
 @dataclass
 class PortfolioSecurity:
+    """Holds data for a single security asset in the porfolio"""
     isin: str
     """
     positive quantity means a long position and a negative ones means a short position.
@@ -120,6 +125,7 @@ class PortfolioSecurity:
 
 
 class Portfolio:
+    """A trader account's portfolio consisting of cash, securities, and positions"""
 
     def __init__(self):
         self.cash: PortfolioCash = PortfolioCash()
@@ -136,28 +142,34 @@ class Portfolio:
         self._positions_lock = threading.Lock()
 
     def has_asset(self, isin: str) -> bool:
+        """Checks if portfolio has any asset of a specific security"""
         with self._assets_lock:
             return any(x for x in self._assets if x.isin == isin)
 
     def get_asset(self, isin: str) -> PortfolioSecurity:
+        """Get asset in the portfolio from a specific security"""
         with self._assets_lock:
             return next((x for x in self._assets if x.isin == isin), None)
 
     def get_asset_quantity(self, isin: str) -> int:
+        """Get asset quantity in the portfolio from a specific security"""
         with self._assets_lock:
             return next((x.quantity for x in self._assets if x.isin == isin), 0)
 
     def get_all_assets(self) -> list[PortfolioSecurity]:
+        """Get a copy of the assets list in the portfolio"""
         with self._assets_lock:
             return self._assets.copy()
 
     def remove_asset(self, isin: str) -> None:
+        """Remove an asset from the portfolio"""
         with self._assets_lock:
             asset = next((x for x in self._assets if x.isin == isin), None)
             if asset:
                 self._assets.remove(asset)
 
     def empty_asset(self) -> None:
+        """Remove all assets from the portfolio"""
         with self._assets_lock:
             self._assets.clear()
 
@@ -169,6 +181,7 @@ class Portfolio:
             instrument_last_price: int = None,
             instrument_close_price: int = None
     ) -> None:
+        """Updates a specific asset in the portfolio"""
         with self._assets_lock:
             asset = next((x for x in self._assets if x.isin == isin), None)
             if asset:
@@ -187,22 +200,31 @@ class Portfolio:
                     ))
 
     def has_position(self, isin: str) -> bool:
+        """Checks if portfolio has any position of a specific security"""
         with self._positions_lock:
-            return any(x for x in self._positions if x.isin == isin)
+            return any(
+                x
+                for x in self._positions
+                if x.isin == isin
+            )
 
     def get_position(self, isin: str) -> PortfolioSecurity:
+        """Get position in the portfolio from a specific security"""
         with self._positions_lock:
             return next((x for x in self._positions if x.isin == isin), None)
 
     def get_position_quantity(self, isin: str) -> int:
+        """Get position quantity in the portfolio from a specific security"""
         with self._positions_lock:
             return next((x.quantity for x in self._positions if x.isin == isin), 0)
 
     def get_all_positions(self) -> list[PortfolioSecurity]:
+        """Get a copy of the positions list in the portfolio"""
         with self._positions_lock:
             return self._positions.copy()
 
     def remove_position(self, isin: str) -> None:
+        """Remove a position from the portfolio"""
         with self._positions_lock:
             position = next(
                 (x for x in self._positions if x.isin == isin), None)
@@ -210,6 +232,7 @@ class Portfolio:
                 self._positions.remove(position)
 
     def empty_position(self) -> None:
+        """Remove all positions from the portfolio"""
         with self._positions_lock:
             self._positions.clear()
 
@@ -221,6 +244,7 @@ class Portfolio:
             instrument_last_price: int = None,
             instrument_close_price: int = None
     ) -> None:
+        """Updates a specific position in the portfolio"""
         with self._positions_lock:
             position = next(
                 (x for x in self._positions if x.isin == isin), None)
