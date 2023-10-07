@@ -231,21 +231,22 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_client_type_daily_list(self.sample_instrument.identification.tsetmc_code)
                     chosen_date = date(year=2023, month=9, day=11)
-                    date_data = next(x for x in data if x.date == chosen_date)
-                    self.assertTrue(date_data.legal_buy_num == 13)
-                    self.assertTrue(date_data.legal_buy_value == 259393764720)
-                    self.assertTrue(date_data.legal_buy_volume == 46754064)
-                    self.assertTrue(date_data.legal_sell_num == 15)
-                    self.assertTrue(date_data.legal_sell_value == 192455986390)
-                    self.assertTrue(date_data.legal_sell_volume == 34727215)
-                    self.assertTrue(date_data.natural_buy_num == 1277)
+                    date_data = next(
+                        x for x in data if x.record_date == chosen_date)
+                    self.assertTrue(date_data.legal.buy.num == 13)
+                    self.assertTrue(date_data.legal.buy.value == 259393764720)
+                    self.assertTrue(date_data.legal.buy.volume == 46754064)
+                    self.assertTrue(date_data.legal.sell.num == 15)
+                    self.assertTrue(date_data.legal.sell.value == 192455986390)
+                    self.assertTrue(date_data.legal.sell.volume == 34727215)
+                    self.assertTrue(date_data.natural.buy.num == 1277)
                     self.assertTrue(
-                        date_data.natural_buy_value == 152695292260)
-                    self.assertTrue(date_data.natural_buy_volume == 27555921)
-                    self.assertTrue(date_data.natural_sell_num == 1242)
+                        date_data.natural.buy.value == 152695292260)
+                    self.assertTrue(date_data.natural.buy.volume == 27555921)
+                    self.assertTrue(date_data.natural.sell.num == 1242)
                     self.assertTrue(
-                        date_data.natural_sell_value == 219633070590)
-                    self.assertTrue(date_data.natural_sell_volume == 39582770)
+                        date_data.natural.sell.value == 219633070590)
+                    self.assertTrue(date_data.natural.sell.volume == 39582770)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
                     raise
@@ -321,7 +322,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_instrument_share_change(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue(len(data) > 5)
-                    self.assertTrue(any(x.date == date(year=2022, month=8, day=9)
+                    self.assertTrue(any(x.record_date == date(year=2022, month=8, day=9)
                                         and x.total_shares_before == 293000000000
                                         and x.total_shares_after == 530000000000 for x in data))
             except Exception as e:
@@ -379,7 +380,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_best_limits_intraday_history_list(
                         self.sample_instrument.identification.tsetmc_code, self.sample_date)
-                    self.assertTrue(any(x.time == time(hour=8, minute=45, second=36) and
+                    self.assertTrue(any(x.record_time == time(hour=8, minute=45, second=36) and
                                         x.row_number == 5 and x.reference_id == 11679170214 and
                                         x.demand.volume == 163213 and x.demand.price == 7000 for x in data))
             except Exception as e:
@@ -405,7 +406,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_index_history(self.sample_index_identification.tsetmc_code)
-                    self.assertTrue(any(x.date == date(year=2023, month=9, day=13) and
+                    self.assertTrue(any(x.record_date == date(year=2023, month=9, day=13) and
                                         x.last_value == 2126741.7 and x.min_value == 2126690 and
                                         x.max_value == 2130510 for x in data))
             except Exception as e:

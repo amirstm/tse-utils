@@ -55,8 +55,10 @@ class OrderBook():
 @dataclass
 class ClientTypeTradeQuantity:
     """Holds trade quantity for a single side of a single type of client"""
-    num: int = 0
-    volume: int = 0
+    num: int = None
+    volume: int = None
+    # In many cases the value parameter is not valued
+    value: int = None
 
 
 @dataclass

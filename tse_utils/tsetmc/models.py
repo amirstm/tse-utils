@@ -195,53 +195,75 @@ class BestLimits:
 
 
 @dataclass
-class ClosingPriceDaily(ClosingPriceInfo):
+class ClosingPriceDaily(realtime.TradeCandle):
+    """Holds historical data of an instrument's trades for a single day"""
+
     def __init__(self, tsetmc_raw_data):
-        self.close_price = tsetmc_raw_data["pClosing"]
-        self.last_price = tsetmc_raw_data["pDrCotVal"]
-        self.open_price = tsetmc_raw_data["priceFirst"]
-        self.max_price = tsetmc_raw_data["priceMax"]
-        self.min_price = tsetmc_raw_data["priceMin"]
-        self.previous_price = tsetmc_raw_data["priceYesterday"]
-        self.trade_value = tsetmc_raw_data["qTotCap"]
-        self.trade_volume = tsetmc_raw_data["qTotTran5J"]
-        self.trade_num = tsetmc_raw_data["zTotTran"]
         ltd_date = tsetmc_raw_data["dEven"]
         ltd_time = tsetmc_raw_data["hEven"]
-        self.last_trade_datetime = datetime(
+        last_trade_datetime = datetime(
             year=ltd_date // 10000, month=ltd_date // 100 % 100, day=ltd_date % 100,
             hour=ltd_time // 10000, minute=ltd_time // 100 % 100, second=ltd_time % 100
+        )
+        realtime.TradeCandle.__init__(
+            self=self,
+            previous_price=tsetmc_raw_data["priceYesterday"],
+            open_price=tsetmc_raw_data["priceFirst"],
+            last_price=tsetmc_raw_data["pDrCotVal"],
+            close_price=tsetmc_raw_data["pClosing"],
+            max_price=tsetmc_raw_data["priceMax"],
+            min_price=tsetmc_raw_data["priceMin"],
+            trade_num=tsetmc_raw_data["zTotTran"],
+            trade_value=tsetmc_raw_data["qTotCap"],
+            trade_volume=tsetmc_raw_data["qTotTran5J"],
+            last_trade_datetime=last_trade_datetime
         )
 
 
 @dataclass
-class ClientTypeDaily(ClientType):
-    legal_buy_value: int = None
-    legal_sell_value: int = None
-    natural_buy_value: int = None
-    natural_sell_value: int = None
-    date: date = None
+class ClientTypeDaily(realtime.ClientType):
+    """Holds historical data of an instrument's client type for a single day"""
+    record_date: date = None
 
     def __init__(self, tsetmc_raw_data):
-        self.legal_buy_num = tsetmc_raw_data["buy_N_Count"]
-        self.legal_buy_value = tsetmc_raw_data["buy_N_Value"]
-        self.legal_buy_volume = tsetmc_raw_data["buy_N_Volume"]
-        self.legal_sell_num = tsetmc_raw_data["sell_N_Count"]
-        self.legal_sell_value = tsetmc_raw_data["sell_N_Value"]
-        self.legal_sell_volume = tsetmc_raw_data["sell_N_Volume"]
-        self.natural_buy_num = tsetmc_raw_data["buy_I_Count"]
-        self.natural_buy_value = tsetmc_raw_data["buy_I_Value"]
-        self.natural_buy_volume = tsetmc_raw_data["buy_I_Volume"]
-        self.natural_sell_num = tsetmc_raw_data["sell_I_Count"]
-        self.natural_sell_value = tsetmc_raw_data["sell_I_Value"]
-        self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
+        realtime.ClientType.__init__(
+            self=self,
+            legal=realtime.ClientTypeTrade(
+                buy=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["buy_N_Count"],
+                    volume=tsetmc_raw_data["buy_N_Volume"],
+                    value=tsetmc_raw_data["buy_N_Value"],
+                ),
+                sell=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["sell_N_Count"],
+                    volume=tsetmc_raw_data["sell_N_Volume"],
+                    value=tsetmc_raw_data["sell_N_Value"],
+                )
+            ),
+            natural=realtime.ClientTypeTrade(
+                buy=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["buy_I_Count"],
+                    volume=tsetmc_raw_data["buy_I_Volume"],
+                    value=tsetmc_raw_data["buy_I_Value"],
+                ),
+                sell=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["sell_I_Count"],
+                    volume=tsetmc_raw_data["sell_I_Volume"],
+                    value=tsetmc_raw_data["sell_I_Value"],
+                )
+            )
+        )
         rd_date = tsetmc_raw_data["recDate"]
-        self.date = date(year=rd_date // 10000, month=rd_date //
-                         100 % 100, day=rd_date % 100)
+        self.record_date = date(
+            year=rd_date // 10000,
+            month=rd_date // 100 % 100,
+            day=rd_date % 100
+        )
 
 
 @dataclass
 class TradeIntraday:
+    """Intraday micro trade"""
     price: int = None
     volume: int = None
     index: int = None
@@ -254,13 +276,19 @@ class TradeIntraday:
         self.index = tsetmc_raw_data["nTran"]
         h_even = tsetmc_raw_data["hEven"]
         self.time = time(
-            hour=h_even // 10000, minute=h_even // 100 % 100, second=h_even % 100
+            hour=h_even // 10000,
+            minute=h_even // 100 % 100,
+            second=h_even % 100
         )
         self.is_canceled = bool(tsetmc_raw_data["canceled"])
 
 
 @dataclass
 class PriceAdjustment:
+    """
+    Price adjustment happens when a company distributes dividens \
+    or changes the shareholders' equity.
+    """
     date: date = None
     price_before: int = None
     price_after: int = None
@@ -270,13 +298,16 @@ class PriceAdjustment:
         self.price_after = tsetmc_raw_data["pClosing"]
         d_even = tsetmc_raw_data["dEven"]
         self.date = date(
-            year=d_even // 10000, month=d_even // 100 % 100, day=d_even % 100
+            year=d_even // 10000,
+            month=d_even // 100 % 100,
+            day=d_even % 100
         )
 
 
 @dataclass
 class InstrumentShareChange:
-    date: date = None
+    """Changes in the total shareholders' equity of a company"""
+    record_date: date = None
     total_shares_before: int = None
     total_shares_after: int = None
 
@@ -284,29 +315,38 @@ class InstrumentShareChange:
         self.total_shares_before = tsetmc_raw_data["numberOfShareOld"]
         self.total_shares_after = tsetmc_raw_data["numberOfShareNew"]
         d_even = tsetmc_raw_data["dEven"]
-        self.date = date(year=d_even // 10000, month=d_even //
-                         100 % 100, day=d_even % 100)
+        self.record_date = date(
+            year=d_even // 10000,
+            month=d_even // 100 % 100,
+            day=d_even % 100
+        )
 
 
 @dataclass
 class BestLimitsHistoryRow(BestLimitsRow):
+    """Holds a single row of best limits from an instrument's history"""
     row_number: int = None
-    time: time = None
+    record_time: time = None
     reference_id: int = None
 
     def __init__(self, tsetmc_raw_data, *args):
         self.row_number = tsetmc_raw_data["number"]
         self.reference_id = tsetmc_raw_data["refID"]
         h_even = tsetmc_raw_data["hEven"]
-        self.time = time(
+        self.record_time = time(
             hour=h_even // 10000, minute=h_even // 100 % 100, second=h_even % 100
         )
-        super().__init__(tsetmc_raw_data=tsetmc_raw_data, *args)
+        BestLimitsRow.__init__(
+            self=self,
+            tsetmc_raw_data=tsetmc_raw_data,
+            *args
+        )
 
 
 @dataclass
 class IndexDaily:
-    date: date = None
+    """Daily data for a market index"""
+    record_date: date = None
     min_value: float = None
     max_value: float = None
     last_value: float = None
@@ -316,13 +356,16 @@ class IndexDaily:
         self.max_value = tsetmc_raw_data["xNivInuPhMresIbs"]
         self.last_value = tsetmc_raw_data["xNivInuClMresIbs"]
         d_even = tsetmc_raw_data["dEven"]
-        self.date = date(
-            year=d_even // 10000, month=d_even // 100 % 100, day=d_even % 100
+        self.record_date = date(
+            year=d_even // 10000,
+            month=d_even // 100 % 100,
+            day=d_even % 100
         )
 
 
 @dataclass
 class InstrumentOptionInfo:
+    """Technical information of an option contract instrument"""
     tsetmc_code: str = None
     open_positions: int = None
     exercise_price: int = None
