@@ -38,25 +38,47 @@ class OrderBook():
 
 
 @dataclass
-class ClientType():
+class ClientTypeTradeQuantity:
+    """Holds trade quantity for a single side of a single type of client"""
+    num: int = 0
+    volume: int = 0
+
+
+@dataclass
+class ClientTypeTrade:
+    """Holds trades for a single type of client"""
+    buy: ClientTypeTradeQuantity
+    sell: ClientTypeTradeQuantity
+
+    def __init__(
+            self,
+            buy: ClientTypeTradeQuantity = None,
+            sell: ClientTypeTradeQuantity = None
+    ):
+        self.buy = buy if buy else ClientTypeTradeQuantity()
+        self.sell = sell if sell else ClientTypeTradeQuantity()
+
+
+@dataclass
+class ClientType:
     """
     ClientType holds data used to separate the share of the natural investors \
     from the legal ones on trades
     """
-    # pylint: disable=too-many-instance-attributes
-    # The variables of client type are 2*2*2 and 8 is logical in this case
-    legal_buy_num: int = None
-    legal_buy_volume: int = None
-    legal_sell_num: int = None
-    legal_sell_volume: int = None
-    natural_buy_num: int = None
-    natural_buy_volume: int = None
-    natural_sell_num: int = None
-    natural_sell_volume: int = None
+    legal: ClientTypeTrade
+    natural: ClientTypeTrade
+
+    def __init__(
+            self,
+            legal: ClientTypeTrade = None,
+            natural: ClientTypeTrade = None
+    ):
+        self.legal = legal if legal else ClientTypeTrade()
+        self.natural = natural if natural else ClientTypeTrade()
 
     def trade_volume(self) -> int:
         """returns total trade volume"""
-        return self.legal_buy_volume + self.natural_buy_volume
+        return self.legal.buy.volume + self.natural.buy.volume
 
 
 @dataclass

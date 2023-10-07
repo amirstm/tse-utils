@@ -26,8 +26,9 @@ class InstrumentIdentification(instrument.InstrumentIdentification):
             tsetmc_raw_data["sector"]["cSecVal"].replace(" ", "")
         )
         self.sector_title = tsetmc_raw_data["sector"]["lSecVal"]
-        self.sub_sector_code = tsetmc_raw_data["subSector"]["cSoSecVal"]
-        self.sub_sector_title = tsetmc_raw_data["subSector"]["lSoSecVal"]
+        if "subSector" in tsetmc_raw_data:
+            self.sub_sector_code = tsetmc_raw_data["subSector"]["cSoSecVal"]
+            self.sub_sector_title = tsetmc_raw_data["subSector"]["lSoSecVal"]
         self.type_id = int(tsetmc_raw_data["yVal"])
         instrument.InstrumentIdentification.__init__(
             self=self,
@@ -134,15 +135,32 @@ class InstrumentInfo(InstrumentIdentification, realtime.BigQuantityParams):
 
 @dataclass
 class ClientType(realtime.ClientType):
+    """ClientType data for an instrument"""
+
     def __init__(self, tsetmc_raw_data):
-        self.legal_buy_num = tsetmc_raw_data["buy_CountN"]
-        self.legal_buy_volume = tsetmc_raw_data["buy_N_Volume"]
-        self.legal_sell_num = tsetmc_raw_data["sell_CountN"]
-        self.legal_sell_volume = tsetmc_raw_data["sell_N_Volume"]
-        self.natural_buy_num = tsetmc_raw_data["buy_CountI"]
-        self.natural_buy_volume = tsetmc_raw_data["buy_I_Volume"]
-        self.natural_sell_num = tsetmc_raw_data["sell_CountI"]
-        self.natural_sell_volume = tsetmc_raw_data["sell_I_Volume"]
+        realtime.ClientType.__init__(
+            self=self,
+            legal=realtime.ClientTypeTrade(
+                buy=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["buy_CountN"],
+                    volume=tsetmc_raw_data["buy_N_Volume"]
+                ),
+                sell=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["sell_CountN"],
+                    volume=tsetmc_raw_data["sell_N_Volume"]
+                )
+            ),
+            natural=realtime.ClientTypeTrade(
+                buy=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["buy_CountI"],
+                    volume=tsetmc_raw_data["buy_I_Volume"]
+                ),
+                sell=realtime.ClientTypeTradeQuantity(
+                    num=tsetmc_raw_data["sell_CountI"],
+                    volume=tsetmc_raw_data["sell_I_Volume"]
+                )
+            )
+        )
 
 
 @dataclass

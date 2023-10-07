@@ -153,8 +153,8 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_client_type(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue(data.legal_sell_volume + data.natural_sell_volume ==
-                                    data.legal_buy_volume + data.natural_buy_volume)
+                    self.assertTrue(data.legal.sell.volume + data.natural.sell.volume ==
+                                    data.legal.buy.volume + data.natural.buy.volume)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
                     raise
