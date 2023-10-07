@@ -9,20 +9,35 @@ from tse_utils.models.enums import Nsc
 
 
 @dataclass
+class OrderBookRowSide:
+    """A single side on a row of an instrument's order book"""
+    num: int = 0
+    volume: int = 0
+    price: int = 0
+
+    def __str__(self) -> str:
+        return f"{self.volume} @ {self.price}"
+
+
+@dataclass
 class OrderBookRow():
     """
     Contains a single row from an instrument's order book
     """
-    demand_num: int = None
-    demand_volume: int = None
-    demand_price: int = None
-    supply_num: int = None
-    supply_volume: int = None
-    supply_price: int = None
+    demand: OrderBookRowSide
+    supply: OrderBookRowSide
+
+    def __init__(
+            self,
+            demand: OrderBookRowSide = None,
+            supply: OrderBookRowSide = None
+    ):
+        self.demand = demand if demand else OrderBookRowSide()
+        self.supply = supply if supply else OrderBookRowSide()
 
     def __str__(self):
-        return f"{self.supply_num} {self.supply_volume} {self.supply_price} | \
-            {self.demand_price} {self.demand_volume} {self.demand_num}"
+        return f"{self.supply.num} {self.supply.volume} {self.supply.price} | \
+            {self.demand.price} {self.demand.volume} {self.demand.num}"
 
 
 @dataclass
@@ -107,26 +122,15 @@ class TradeCandle(PriceRange, TradeQuantity):
     last_trade_datetime: datetime = None
 
 
-@dataclass
-class DeepOrderBookRow:
-    """Deep and complete order book for an instrument"""
-    num: int
-    volume: int
-    price: int
-
-    def __str__(self) -> str:
-        return f"{self.volume} @ {self.price}"
-
-
 class DeepOrderBook:
     """
     DeepOrderbook contains all rows of an instrument's orders on both sides.
     """
 
     def __init__(self):
-        self._buy_rows: list[DeepOrderBookRow] = []
+        self._buy_rows: list[OrderBookRowSide] = []
         self._buy_rows_lock: threading.Lock = threading.Lock()
-        self._sell_rows: list[DeepOrderBookRow] = []
+        self._sell_rows: list[OrderBookRowSide] = []
         self._sell_rows_lock: threading.Lock = threading.Lock()
 
     def update_buy_row(self, num: int, volume: int, price: int) -> None:
@@ -137,7 +141,7 @@ class DeepOrderBook:
                 row.volume = volume
                 row.num = num
             else:
-                self._buy_rows.append(DeepOrderBookRow(
+                self._buy_rows.append(OrderBookRowSide(
                     num=num, volume=volume, price=price))
 
     def update_sell_row(self, num: int, volume: int, price: int) -> None:
@@ -148,7 +152,7 @@ class DeepOrderBook:
                 row.volume = volume
                 row.num = num
             else:
-                self._sell_rows.append(DeepOrderBookRow(
+                self._sell_rows.append(OrderBookRowSide(
                     num=num, volume=volume, price=price))
 
     def remove_buy_row(self, price: int) -> None:
@@ -175,12 +179,12 @@ class DeepOrderBook:
         with self._sell_rows_lock:
             self._sell_rows.clear()
 
-    def get_buy_rows(self) -> list[DeepOrderBookRow]:
+    def get_buy_rows(self) -> list[OrderBookRowSide]:
         """Returns a copy of all buy rows"""
         with self._buy_rows_lock:
             return sorted(self._buy_rows.copy(), key=lambda x: x.price, reverse=True)
 
-    def get_sell_rows(self) -> list[DeepOrderBookRow]:
+    def get_sell_rows(self) -> list[OrderBookRowSide]:
         """Returns a copy of all sell rows"""
         with self._sell_rows_lock:
             return sorted(self._sell_rows.copy(), key=lambda x: x.price, reverse=False)

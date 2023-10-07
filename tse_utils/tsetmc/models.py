@@ -165,17 +165,29 @@ class ClientType(realtime.ClientType):
 
 @dataclass
 class BestLimitsRow(realtime.OrderBookRow):
+    """A single row from an instrument's order book"""
+
     def __init__(self, tsetmc_raw_data):
-        self.demand_num = tsetmc_raw_data["zOrdMeDem"]
-        self.demand_volume = tsetmc_raw_data["qTitMeDem"]
-        self.demand_price = tsetmc_raw_data["pMeDem"]
-        self.supply_num = tsetmc_raw_data["zOrdMeOf"]
-        self.supply_volume = tsetmc_raw_data["qTitMeOf"]
-        self.supply_price = tsetmc_raw_data["pMeOf"]
+        realtime.OrderBookRow.__init__(
+            self=self,
+            demand=realtime.OrderBookRowSide(
+                num=tsetmc_raw_data["zOrdMeDem"],
+                volume=tsetmc_raw_data["qTitMeDem"],
+                price=tsetmc_raw_data["pMeDem"]
+            ),
+            supply=realtime.OrderBookRowSide(
+                num=tsetmc_raw_data["zOrdMeOf"],
+                volume=tsetmc_raw_data["qTitMeOf"],
+                price=tsetmc_raw_data["pMeOf"]
+            )
+        )
 
 
 @dataclass
 class BestLimits:
+    """
+    BestLimit is the same as OrderBook, contains an instrument's active orders
+    """
     rows: list[BestLimitsRow] = None
 
     def __init__(self, tsetmc_raw_data):

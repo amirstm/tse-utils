@@ -381,7 +381,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                         self.sample_instrument.identification.tsetmc_code, self.sample_date)
                     self.assertTrue(any(x.time == time(hour=8, minute=45, second=36) and
                                         x.row_number == 5 and x.reference_id == 11679170214 and
-                                        x.demand_volume == 163213 and x.demand_price == 7000 for x in data))
+                                        x.demand.volume == 163213 and x.demand.price == 7000 for x in data))
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
                     raise
