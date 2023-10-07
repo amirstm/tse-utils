@@ -2,7 +2,8 @@ import unittest
 from datetime import datetime, date, time
 from time import sleep
 import httpx
-from tse_utils.tsetmc import TsetmcScraper, TseClientScraper
+from tse_utils.tsetmc import TsetmcScraper
+from tse_utils.tse_client import TseClientScraper
 from tse_utils.models import instrument
 
 
@@ -547,7 +548,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TseClientScraper() as tse_client:
-                    data = await tse_client.get_instruments_list_raw()
+                    data = await tse_client.__get_instruments_list_raw()
                     self.assertTrue("InstrumentResult" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):

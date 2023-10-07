@@ -582,35 +582,6 @@ class MarketWatchClientTypeData(ClientType):
         )
 
 
-@dataclass
-class TseClientInstrumentIdentity(InstrumentIdentification):
-    """Instrument Identification from TseClient"""
-    last_change_date: date = None
-    is_index: bool = None
-
-    def __init__(self, tseclient_raw_data):
-        self.tsetmc_code = tseclient_raw_data[0]
-        self.isin = tseclient_raw_data[1]
-        self.name_english = tseclient_raw_data[3]
-        self.ticker = tseclient_raw_data[5]
-        self.name_persian = tseclient_raw_data[6]
-        self.type_id = int(tseclient_raw_data[17])
-        sector_code = str(tseclient_raw_data[15]).replace(" ", "")
-        if sector_code.isdigit():
-            self.sector_code = int(sector_code)
-            self.sub_sector_code = int(tseclient_raw_data[16])
-            self.is_index = False
-        else:
-            self.is_index = True
-        self.market_code = int(tseclient_raw_data[9])
-        last_change_date_raw = int(tseclient_raw_data[8])
-        self.last_change_date = date(
-            year=last_change_date_raw//10000,
-            month=last_change_date_raw//100 % 100,
-            day=last_change_date_raw % 100
-        )
-
-
 class TsetmcScrapeException(Exception):
     """Tsetmc bad response status error"""
 
