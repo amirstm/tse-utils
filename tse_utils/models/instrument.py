@@ -57,8 +57,8 @@ class Instrument(InstrumentRealtime):
     ):
         self.identification: InstrumentIdentification = identification
         self.big_quantity_params: BigQuantityParams = BigQuantityParams()
-        self.trade_limitations: OrderLimitations = OrderLimitations()
-        super(InstrumentRealtime, self).__init__()
+        self.order_limitations: OrderLimitations = OrderLimitations()
+        InstrumentRealtime.__init__(self=self)
 
     def ticker_with_tsetmc_hyperlink(self) -> str:
         """
@@ -69,11 +69,11 @@ class Instrument(InstrumentRealtime):
 
     def has_buy_queue(self) -> bool:
         """Checks if instrument has a queue on the buy side"""
-        return self.orderbook.rows[0].demand_price == self.trade_limitations.max_price_threshold
+        return self.orderbook.rows[0].demand_price == self.order_limitations.max_price
 
     def has_sell_queue(self) -> bool:
         """Checks if instrument has a queue on the sell side"""
-        return self.orderbook.rows[0].supply_price == self.trade_limitations.min_price_threshold
+        return self.orderbook.rows[0].supply_price == self.order_limitations.min_price
 
     def __str__(self):
         return str(self.identification)

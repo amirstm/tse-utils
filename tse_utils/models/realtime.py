@@ -60,19 +60,27 @@ class ClientType():
 
 
 @dataclass
-class TradeCandle():
+class PriceRange:
+    """Holds price thresholds"""
+    max_price: int = None
+    min_price: int = None
+
+
+@dataclass
+class TradeQuantity:
+    """Holds trade quantity identifiers"""
+    trade_num: int = None
+    trade_value: int = None
+    trade_volume: int = None
+
+
+@dataclass
+class TradeCandle(PriceRange, TradeQuantity):
     """Holds current or point in time trade data for an instrument"""
-    # pylint: disable=too-many-instance-attributes
-    # TradeCandle inherently contains these attributes
     previous_price: int = None
     open_price: int = None
     close_price: int = None
     last_price: int = None
-    max_price: int = None
-    min_price: int = None
-    trade_num: int = None
-    trade_value: int = None
-    trade_volume: int = None
     open_trade_datetime: datetime = None
     last_trade_datetime: datetime = None
 
@@ -157,23 +165,24 @@ class DeepOrderBook:
 
 
 @dataclass
-class OrderPriceLimitations:
+class OrderPriceLimitations(PriceRange):
     """Holds limitations on prices that mostly change daily"""
-    max_price_threshold: int = None
-    min_price_threshold: int = None
     price_tick: int = 1
 
 
 @dataclass
 class OrderQuantityLimitations:
     """Holds limitations on quantity of orders"""
-    max_buy_order_quantity_threshold: int = None
-    max_sell_order_quantity_threshold: int = None
+    max_buy_order_quantity: int = None
+    max_sell_order_quantity: int = None
     lot_size: int = 1
 
 
 @dataclass
-class OrderLimitations(OrderPriceLimitations, OrderQuantityLimitations):
+class OrderLimitations(
+    OrderPriceLimitations,
+    OrderQuantityLimitations
+):
     """Holds the daily limitations for trading on instrument"""
     nsc: Nsc = None
 
