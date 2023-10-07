@@ -365,43 +365,64 @@ class Trader(ABC, TraderRealtimeData):
         try:
             await self.disconnect()
         except Exception as ex:
-            self.logger.error("Disconnect failed while disposing object.")
+            self.logger.error(
+                "Disconnect failed while disposing object."
+            )
             self.logger.debug(
                 "Encountered %s when trying to disconnect.",
                 ex
             )
 
     def __str__(self) -> str:
-        name = self.identification.display_name if self.identification.display_name else self.credentials.username
-        return f"{str(self.identification)}@{self.credentials.api.broker_title}"
+        name = self.identification.display_name \
+            if self.identification.display_name \
+            else self.credentials.username
+        return f"{name}@{self.credentials.api.broker_title}"
 
     def get_order(self, oms_id) -> Order:
+        """Searchs for an order in the orders list using its oms_id"""
         with self._orders_lock:
             return next((x for x in self._orders if x.oms_id == oms_id), None)
 
-    def get_order_custom(self, filter_func: Callable[[Order], bool]) -> Order:
+    def get_order_custom(
+            self,
+            filter_func: Callable[[Order], bool]
+    ) -> Order:
+        """Searchs for an order in the orders list using a custom filter"""
         with self._orders_lock:
             return next((x for x in self._orders if filter_func(x)), None)
 
-    def get_orders(self, filter_func: Callable[[Order], bool] = lambda x: True) -> list[Order]:
+    def get_orders(
+            self,
+            filter_func: Callable[[Order], bool] = lambda x: True
+    ) -> list[Order]:
+        """Searchs for all orders complying with a filter in the orders list"""
         with self._orders_lock:
             return [x for x in self._orders if filter_func(x)]
 
     def remove_order(self, oms_id) -> None:
+        """Removes an order from the orders list using its oms_id"""
         with self._orders_lock:
             order = next((x for x in self._orders if x.oms_id == oms_id), None)
             if order:
                 self._orders.remove(order)
 
     def empty_orders(self) -> None:
+        """Removes all orders from the orders list"""
         with self._orders_lock:
             self._orders.clear()
 
     def add_order(self, order: Order) -> None:
+        """
+        Adds a new order to the orders list.
+        This method should be used by data pushers and not by the client.
+        Client can use order_send to send a new order.
+        """
         with self._orders_lock:
             self._orders.append(order)
 
     def get_subscribed_instrument(self, isin: str = None):
+        """Gets a subscribed instrument from the subscribed instruments list"""
         return next((
             x
             for x in self._subscribed_instruments
@@ -439,18 +460,24 @@ class Trader(ABC, TraderRealtimeData):
         """
 
     @abstractmethod
-    async def subscribe_instruments_list(self, instruments: list[instrument.Instrument]):
+    async def subscribe_instruments_list(
+        self,
+        instruments: list[instrument.Instrument]
+    ):
         """
         Subscribes the instruments on the OMS pusher to get their realtime data
         """
 
     @abstractmethod
     async def order_send(
-        self, side: TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
-        validity: OrderValidityType = OrderValidityType.DAY, expiration_date: date = None
+        self,
+        order: Order
     ):
         """
-        Used for sending a new order to the OMS
+        Used for sending a new order to the OMS. 
+        The input order object should be used as a data transfer object \
+        and is not added to the orders list, since new orders to be added \
+        there should come from the OMS pushers.
         """
 
     @abstractmethod
