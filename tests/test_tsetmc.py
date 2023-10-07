@@ -19,12 +19,14 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         self.sample_index_identification = instrument.IndexIdentification(
             persian_name="شاخص کل", tsetmc_code="32097828799138957")
         self.sample_option = instrument.OptionInstrument(
-            exercise_date=date(year=2023, month=10, day=18), exercise_price=1653,
+            exercise_date=date(year=2023, month=10, day=18),
+            exercise_price=1653,
             underlying=self.sample_instrument,
             identification=instrument.InstrumentIdentification(
                 isin="IRO9FOLD6821",
                 ticker="ضفلا7020",
-                tsetmc_code="37762443198265540")
+                tsetmc_code="37762443198265540"
+            )
         )
         super().__init__(*args, **kwargs)
 
@@ -459,7 +461,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_primary_market_overview()
                     self.assertTrue(data.market_value > 4e16)
-                    self.assertTrue(data.index_last_value > 1e6)
+                    self.assertTrue(data.overall_index.last_value > 1e6)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
                     raise
@@ -484,7 +486,8 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_secondary_market_overview()
                     self.assertTrue(data.market_value > 1e16)
-                    self.assertTrue(data.index_last_value > 1e4)
+                    self.assertTrue(
+                        data.secondary_market_index.last_value > 1e4)
                     self.assertTrue(data.tertiary_market_value > 1e15)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):

@@ -86,10 +86,29 @@ class DerivativeInstrument(Instrument):
 
     def __init__(self, underlying: Instrument, **kwargs):
         self.underlying = underlying
-        super().__init__(**kwargs)
+        Instrument.__init__(self=self, **kwargs)
 
 
-class OptionInstrument(DerivativeInstrument):
+@dataclass
+class ExerciseParams:
+    """Holds exercise info for derivative instruments that have exercise"""
+    exercise_price: int = None
+    exercise_date: date = None
+
+
+@dataclass
+class OptionInstrumentMarginParams:
+    """Holds parameters used for the calculations of margins"""
+    a_factor: float = None
+    b_factor: float = None
+    c_factor: float = None
+
+
+class OptionInstrument(
+    DerivativeInstrument,
+    ExerciseParams,
+    OptionInstrumentMarginParams
+):
     """Holds data for option contract instruments"""
 
     def __init__(
@@ -99,10 +118,14 @@ class OptionInstrument(DerivativeInstrument):
             lot_size: int = None,
             **kwargs
     ):
-        self.exercise_date = exercise_date
-        self.exercise_price = exercise_price
-        self.lot_size = lot_size
-        super().__init__(**kwargs)
+        self.lot_size: int = lot_size
+        ExerciseParams.__init__(
+            self=self,
+            exercise_date=exercise_date,
+            exercise_price=exercise_price
+        )
+        OptionInstrumentMarginParams.__init__(self=self)
+        DerivativeInstrument.__init__(self=self, **kwargs)
 
 
 @dataclass

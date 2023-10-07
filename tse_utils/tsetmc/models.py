@@ -364,94 +364,116 @@ class IndexDaily:
 
 
 @dataclass
-class InstrumentOptionInfo:
+class InstrumentOptionInfo(
+    instrument.ExerciseParams,
+    instrument.OptionInstrumentMarginParams
+):
     """Technical information of an option contract instrument"""
     tsetmc_code: str = None
     open_positions: int = None
-    exercise_price: int = None
-    exercise_date: date = None
     lot_size: int = None
     begin_date: date = None
-    a_factor: float = None
-    b_factor: float = None
-    c_factor: float = None
     underlying_tsetmc_code: str = None
 
     def __init__(self, tsetmc_raw_data):
+        end_date = tsetmc_raw_data["endDate"]
+        exercise_date = date(
+            year=end_date // 10000,
+            month=end_date // 100 % 100,
+            day=end_date % 100
+        )
+        instrument.ExerciseParams.__init__(
+            self=self,
+            exercise_price=tsetmc_raw_data["strikePrice"],
+            exercise_date=exercise_date
+        )
+        instrument.OptionInstrumentMarginParams.__init__(
+            self=self,
+            a_factor=tsetmc_raw_data["aFactor"],
+            b_factor=tsetmc_raw_data["bFactor"],
+            c_factor=tsetmc_raw_data["cFactor"]
+        )
         self.tsetmc_code = tsetmc_raw_data["insCode"]
         self.open_positions = tsetmc_raw_data["buyOP"]
-        self.exercise_price = tsetmc_raw_data["strikePrice"]
-        end_date = tsetmc_raw_data["endDate"]
-        self.exercise_date = date(
-            year=end_date // 10000, month=end_date // 100 % 100, day=end_date % 100
-        )
         begin_date = tsetmc_raw_data["beginDate"]
         self.begin_date = date(
-            year=begin_date // 10000, month=begin_date // 100 % 100, day=begin_date % 100
+            year=begin_date // 10000,
+            month=begin_date // 100 % 100,
+            day=begin_date % 100
         )
         self.lot_size = tsetmc_raw_data["contractSize"]
-        self.a_factor = tsetmc_raw_data["aFactor"]
-        self.b_factor = tsetmc_raw_data["bFactor"]
-        self.c_factor = tsetmc_raw_data["cFactor"]
         self.underlying_tsetmc_code = tsetmc_raw_data["uaInsCode"]
 
 
 @dataclass
-class PrimaryMarketOverview:
+class IndexValue:
+    """Holds the last value of an index with its recent change"""
+    last_value: int
+    change: int
+
+
+@dataclass
+class PrimaryMarketOverview(realtime.TradeQuantity):
     '''
     Contains data for the main (Bourse) market.
     '''
-    index_last_value: int = None
-    index_change: int = None
-    index_equal_weighted_last_value: int = None
-    index_equal_weighted_change: int = None
-    datetime: datetime = None
-    trade_value: int = None
-    trade_volume: int = None
-    trade_num: int = None
+    overall_index: IndexValue = None
+    equal_weighted_index: IndexValue = None
+    record_datetime: datetime = None
     market_state: str = None
     market_state_title: str = None
     market_value: int = None
 
     def __init__(self, tsetmc_raw_data):
-        self.index_change = tsetmc_raw_data["indexChange"]
-        self.index_equal_weighted_change = tsetmc_raw_data["indexEqualWeightedChange"]
-        self.index_equal_weighted_last_value = tsetmc_raw_data["indexEqualWeightedLastValue"]
-        self.index_last_value = tsetmc_raw_data["indexLastValue"]
+        realtime.TradeQuantity.__init__(
+            self=self,
+            trade_num=tsetmc_raw_data["marketActivityZTotTran"],
+            trade_value=tsetmc_raw_data["marketActivityQTotCap"],
+            trade_volume=tsetmc_raw_data["marketActivityQTotTran"]
+        )
+        self.overall_index = IndexValue(
+            last_value=tsetmc_raw_data["indexLastValue"],
+            change=tsetmc_raw_data["indexChange"]
+        )
+        self.equal_weighted_index = IndexValue(
+            last_value=tsetmc_raw_data["indexEqualWeightedLastValue"],
+            change=tsetmc_raw_data["indexEqualWeightedChange"]
+        )
         market_activity_deven = tsetmc_raw_data["marketActivityDEven"]
         market_activity_heven = tsetmc_raw_data["marketActivityHEven"]
-        self.datetime = datetime(
+        self.record_datetime = datetime(
             year=market_activity_deven // 10000, month=market_activity_deven // 100 % 100,
             day=market_activity_deven % 100, hour=market_activity_heven // 10000,
             minute=market_activity_heven // 100 % 100, second=market_activity_heven % 100
         )
-        self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
-        self.trade_volume = tsetmc_raw_data["marketActivityQTotTran"]
-        self.trade_num = tsetmc_raw_data["marketActivityZTotTran"]
         self.market_state = tsetmc_raw_data["marketState"]
         self.market_state_title = tsetmc_raw_data["marketStateTitle"]
         self.market_value = tsetmc_raw_data["marketValue"]
 
 
 @dataclass
-class SecondaryMarketOverview:
+class SecondaryMarketOverview(realtime.TradeQuantity):
     '''
-    Contains data for the secondary and tertiary (FarBourse and Paye) market.
+    Contains data for the secondary and tertiary (FarBourse and Paye) markets.
     '''
-    index_last_value: int = None
-    index_change: int = None
+    secondary_market_index: IndexValue = None
     datetime: datetime = None
-    trade_value: int = None
-    trade_volume: int = None
-    trade_num: int = None
     market_state: str = None
     market_state_title: str = None
     market_value: int = None
     tertiary_market_value: int = None
 
     def __init__(self, tsetmc_raw_data):
-        self.index_change = tsetmc_raw_data["indexChange"]
-        self.index_last_value = tsetmc_raw_data["indexLastValue"]
+        realtime.TradeQuantity.__init__(
+            self=self,
+            trade_num=tsetmc_raw_data["marketActivityZTotTran"],
+            trade_value=tsetmc_raw_data["marketActivityQTotCap"],
+            trade_volume=tsetmc_raw_data["marketActivityQTotTran"]
+        )
+        self.secondary_market_index = IndexValue(
+            last_value=tsetmc_raw_data["indexLastValue"],
+            change=tsetmc_raw_data["indexChange"]
+        )
         market_activity_deven = tsetmc_raw_data["marketActivityDEven"]
         market_activity_heven = tsetmc_raw_data["marketActivityHEven"]
         self.datetime = datetime(
@@ -459,9 +481,6 @@ class SecondaryMarketOverview:
             day=market_activity_deven % 100, hour=market_activity_heven // 10000,
             minute=market_activity_heven // 100 % 100, second=market_activity_heven % 100
         )
-        self.trade_value = tsetmc_raw_data["marketActivityQTotCap"]
-        self.trade_volume = tsetmc_raw_data["marketActivityQTotTran"]
-        self.trade_num = tsetmc_raw_data["marketActivityZTotTran"]
         self.market_state = tsetmc_raw_data["marketState"]
         self.market_state_title = tsetmc_raw_data["marketStateTitle"]
         self.market_value = tsetmc_raw_data["marketValue"]
@@ -469,21 +488,30 @@ class SecondaryMarketOverview:
 
 
 @dataclass
-class MarketWatchBestLimitsRow(BestLimitsRow):
+class MarketWatchBestLimitsRow(realtime.OrderBookRow):
+    """Order book row from market watch"""
     row_id: int = None
 
     def __init__(self, tsetmc_raw_data):
-        self.demand_num = tsetmc_raw_data["zmd"]
-        self.demand_volume = tsetmc_raw_data["qmd"]
-        self.demand_price = tsetmc_raw_data["pmd"]
-        self.supply_num = tsetmc_raw_data["zmo"]
-        self.supply_volume = tsetmc_raw_data["qmo"]
-        self.supply_price = tsetmc_raw_data["pmo"]
+        realtime.OrderBookRow.__init__(
+            self=self,
+            demand=realtime.OrderBookRowSide(
+                num=tsetmc_raw_data["zmd"],
+                volume=tsetmc_raw_data["qmd"],
+                price=tsetmc_raw_data["pmd"]
+            ),
+            supply=realtime.OrderBookRowSide(
+                num=tsetmc_raw_data["zmo"],
+                volume=tsetmc_raw_data["qmo"],
+                price=tsetmc_raw_data["pmo"]
+            )
+        )
         self.row_id = tsetmc_raw_data["rid"]
 
 
 @dataclass
 class MarketWatchBestLimits:
+    """Instrument order book from market watch"""
     rows: list[MarketWatchBestLimitsRow] = None
 
     def __init__(self, tsetmc_raw_data):
@@ -491,52 +519,72 @@ class MarketWatchBestLimits:
 
 
 @dataclass
-class MarketWatchTradeData(realtime.TradeCandle, instrument.InstrumentIdentification):
+class MarketWatchTradeData(
+    realtime.BigQuantityParams,
+):
+    """Trade and order book data of an instrument from market watch"""
+    price_thresholds: realtime.PriceRange = None
+    identification: instrument.InstrumentIdentification = None
+    intraday_trade_candle: realtime.TradeCandle = None
     last_trade_time: time = None
-    max_price_threshold: int = None
-    min_price_threshold: int = None
     eps: int = None
-    total_shares: int = None
-    base_volume: int = None
-    best_limits: MarketWatchBestLimits = None
+    orderbook: MarketWatchBestLimits = None
 
     def __init__(self, tsetmc_raw_data):
-        self.tsetmc_code = tsetmc_raw_data["insCode"]
-        self.ticker = tsetmc_raw_data["lva"]
-        self.isin = tsetmc_raw_data["insID"]
-        self.name_persian = tsetmc_raw_data["lvc"]
-        self.total_shares = tsetmc_raw_data["ztd"]
+        realtime.BigQuantityParams.__init__(
+            self=self,
+            total_shares=tsetmc_raw_data["ztd"],
+            base_volume=tsetmc_raw_data["bv"]
+        )
+        self.price_thresholds = realtime.PriceRange(
+            max_price=tsetmc_raw_data["pMax"],
+            min_price=tsetmc_raw_data["pMin"]
+        )
+        self.identification = instrument.InstrumentIdentification(
+            tsetmc_code=tsetmc_raw_data["insCode"],
+            ticker=tsetmc_raw_data["lva"],
+            isin=tsetmc_raw_data["insID"],
+            name_persian=tsetmc_raw_data["lvc"]
+        )
+        self.intraday_trade_candle = realtime.TradeCandle(
+            previous_price=tsetmc_raw_data["py"],
+            last_price=tsetmc_raw_data["pdv"],
+            open_price=tsetmc_raw_data["pf"],
+            close_price=tsetmc_raw_data["pcl"],
+            max_price=tsetmc_raw_data["pmx"],
+            min_price=tsetmc_raw_data["pmn"],
+            trade_value=tsetmc_raw_data["qtc"],
+            trade_volume=tsetmc_raw_data["qtj"],
+            trade_num=tsetmc_raw_data["ztt"]
+        )
         self.eps = tsetmc_raw_data["eps"]
-        self.previous_price = tsetmc_raw_data["py"]
-        self.last_price = tsetmc_raw_data["pdv"]
-        self.open_price = tsetmc_raw_data["pf"]
-        self.close_price = tsetmc_raw_data["pcl"]
-        self.max_price_threshold = tsetmc_raw_data["pMax"]
-        self.min_price_threshold = tsetmc_raw_data["pMin"]
-        self.max_price = tsetmc_raw_data["pmx"]
-        self.min_price = tsetmc_raw_data["pmn"]
-        self.trade_value = tsetmc_raw_data["qtc"]
-        self.trade_volume = tsetmc_raw_data["qtj"]
-        self.trade_num = tsetmc_raw_data["ztt"]
-        self.base_volume = tsetmc_raw_data["bv"]
         h_even = tsetmc_raw_data["hEven"]
         self.last_trade_time = time(
-            hour=h_even//10000, minute=h_even//100 % 100, second=h_even % 100)
-        self.best_limits = MarketWatchBestLimits(
-            tsetmc_raw_data=tsetmc_raw_data["blDs"])
+            hour=h_even//10000,
+            minute=h_even//100 % 100,
+            second=h_even % 100
+        )
+        self.orderbook = MarketWatchBestLimits(
+            tsetmc_raw_data=tsetmc_raw_data["blDs"]
+        )
 
 
 @dataclass
 class MarketWatchClientTypeData(ClientType):
+    """Client type data from market watch"""
     tsetmc_code: str = None
 
     def __init__(self, tsetmc_raw_data):
         self.tsetmc_code = tsetmc_raw_data["insCode"]
-        super().__init__(tsetmc_raw_data)
+        ClientType.__init__(
+            self=self,
+            tsetmc_raw_data=tsetmc_raw_data
+        )
 
 
 @dataclass
 class TseClientInstrumentIdentity(InstrumentIdentification):
+    """Instrument Identification from TseClient"""
     last_change_date: date = None
     is_index: bool = None
 
@@ -564,7 +612,7 @@ class TseClientInstrumentIdentity(InstrumentIdentification):
 
 
 class TsetmcScrapeException(Exception):
-    """Tsetmc bad response status error."""
+    """Tsetmc bad response status error"""
 
     def __init__(self, *args, **kwargs):
         self.status_code = kwargs.get('status_code')

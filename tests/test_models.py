@@ -12,6 +12,17 @@ class TestModels(unittest.TestCase):
         self.sample_date = date(year=2023, month=4, day=30)
         super().__init__(*args, **kwargs)
 
+    def test_initiate_option_instrument(self):
+        sample_option = instrument.OptionInstrument(
+            exercise_date=date(year=2023, month=10, day=18),
+            exercise_price=1653,
+            underlying=self.sample_instrument,
+            identification=instrument.InstrumentIdentification(
+                isin="IRO9FOLD6821",
+                ticker="ضفلا7020",
+                tsetmc_code="37762443198265540")
+        )
+
     def test_portfolio_asset_dynamics(self):
         portfolio = trader.Portfolio()
         portfolio.update_asset(
