@@ -15,11 +15,17 @@ class TestModels(unittest.TestCase):
     def test_portfolio_asset_dynamics(self):
         portfolio = trader.Portfolio()
         portfolio.update_asset(
-            isin=self.sample_instrument.identification.isin, quantity=100)
+            trader.PortfolioSecurity(
+                isin=self.sample_instrument.identification.isin,
+                quantity=100
+            ))
         self.assertTrue(portfolio.get_asset_quantity(
             self.sample_instrument.identification.isin) == 100)
         portfolio.update_asset(
-            isin=self.sample_instrument.identification.isin, quantity=200)
+            trader.PortfolioSecurity(
+                isin=self.sample_instrument.identification.isin,
+                quantity=200
+            ))
         self.assertTrue(portfolio.get_asset_quantity(
             self.sample_instrument.identification.isin) == 200)
         self.assertTrue(portfolio.get_asset(
@@ -30,7 +36,10 @@ class TestModels(unittest.TestCase):
         self.assertTrue(portfolio.get_asset(
             self.sample_instrument.identification.isin) is None)
         portfolio.update_asset(
-            isin=self.sample_instrument.identification.isin, quantity=300)
+            trader.PortfolioSecurity(
+                isin=self.sample_instrument.identification.isin,
+                quantity=300
+            ))
         self.assertTrue(portfolio.get_asset_quantity(
             self.sample_instrument.identification.isin) == 300)
         portfolio.empty_asset()
@@ -42,11 +51,17 @@ class TestModels(unittest.TestCase):
     def test_portfolio_position_dynamics(self):
         portfolio = trader.Portfolio()
         portfolio.update_position(
-            isin=self.sample_instrument.identification.isin, quantity=-100)
+            trader.PortfolioSecurity(
+                isin=self.sample_instrument.identification.isin,
+                quantity=-100
+            ))
         self.assertTrue(portfolio.get_position_quantity(
             self.sample_instrument.identification.isin) == -100)
         portfolio.update_position(
-            isin=self.sample_instrument.identification.isin, quantity=-200)
+            trader.PortfolioSecurity(
+                isin=self.sample_instrument.identification.isin,
+                quantity=-200
+            ))
         self.assertTrue(portfolio.get_position_quantity(
             self.sample_instrument.identification.isin) == -200)
         self.assertTrue(portfolio.get_position(
@@ -58,7 +73,10 @@ class TestModels(unittest.TestCase):
         self.assertTrue(portfolio.get_position(
             self.sample_instrument.identification.isin) is None)
         portfolio.update_position(
-            isin=self.sample_instrument.identification.isin, quantity=-300)
+            trader.PortfolioSecurity(
+                isin=self.sample_instrument.identification.isin,
+                quantity=-300
+            ))
         self.assertTrue(portfolio.get_position_quantity(
             self.sample_instrument.identification.isin) == -300)
         portfolio.empty_position()
@@ -139,7 +157,11 @@ class TestModels(unittest.TestCase):
                 pass
 
         sample_trader = ImplementedTrader(
-            trader.TraderIdentification(), trader.TradingAPI())
+            credentials=trader.TraderCredentials(
+                api=trader.TradingAPI(),
+                username="aaa"
+            )
+        )
         # Initiation
         sample_trader.add_order(trader.Order(
             oms_id=1, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=10, price=5))

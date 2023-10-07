@@ -203,28 +203,25 @@ class Portfolio:
 
     def update_asset(
             self,
-            isin: str,
-            quantity: int,
-            position_open_price: int = None,
-            instrument_last_price: int = None,
-            instrument_close_price: int = None
+            security: PortfolioSecurity
     ) -> None:
         """Updates a specific asset in the portfolio"""
         with self._assets_lock:
-            asset = next((x for x in self._assets if x.isin == isin), None)
+            asset = next(
+                (x for x in self._assets if x.isin == security.isin), None)
             if asset:
-                asset.quantity = quantity
-                asset.position_open_price = position_open_price
-                asset.instrument_close_price = instrument_close_price
-                asset.instrument_last_price = instrument_last_price
+                asset.quantity = security.quantity
+                asset.position_open_price = security.position_open_price
+                asset.instrument_close_price = security.instrument_close_price
+                asset.instrument_last_price = security.instrument_last_price
             else:
                 self._assets.append(
                     PortfolioSecurity(
-                        isin=isin,
-                        quantity=quantity,
-                        position_open_price=position_open_price,
-                        instrument_close_price=instrument_close_price,
-                        instrument_last_price=instrument_last_price
+                        isin=security.isin,
+                        quantity=security.quantity,
+                        position_open_price=security.position_open_price,
+                        instrument_close_price=security.instrument_close_price,
+                        instrument_last_price=security.instrument_last_price
                     ))
 
     def has_position(self, isin: str) -> bool:
@@ -266,55 +263,31 @@ class Portfolio:
 
     def update_position(
             self,
-            isin: str,
-            quantity: int,
-            position_open_price: int = None,
-            instrument_last_price: int = None,
-            instrument_close_price: int = None
+            security: PortfolioSecurity
     ) -> None:
         """Updates a specific position in the portfolio"""
         with self._positions_lock:
             position = next(
-                (x for x in self._positions if x.isin == isin), None)
+                (x for x in self._positions if x.isin == security.isin), None)
             if position:
-                position.quantity = quantity
-                position.position_open_price = position_open_price
-                position.instrument_close_price = instrument_close_price
-                position.instrument_last_price = instrument_last_price
+                position.quantity = security.quantity
+                position.position_open_price = security.position_open_price
+                position.instrument_close_price = security.instrument_close_price
+                position.instrument_last_price = security.instrument_last_price
             else:
                 self._positions.append(
                     PortfolioSecurity(
-                        isin=isin,
-                        quantity=quantity,
-                        position_open_price=position_open_price,
-                        instrument_close_price=instrument_close_price,
-                        instrument_last_price=instrument_last_price
+                        isin=security.isin,
+                        quantity=security.quantity,
+                        position_open_price=security.position_open_price,
+                        instrument_close_price=security.instrument_close_price,
+                        instrument_last_price=security.instrument_last_price
                     ))
 
 
 @dataclass
-class TraderIdentification:
-    """
-    Holds the identification for a trader.
-    """
-    id: int = None
-    username: str = None
-    password: str = None
-    first_name: str = None
-    last_name: str = None
-    """
-    display_name is used for logging purposes. If it is not set, username will be used insted.
-    """
-    display_name: str = None
-    bourse_code: str = None
-    oms_code: str = None
-
-    def __str__(self) -> str:
-        return self.display_name if self.display_name else self.username
-
-
-@dataclass
 class TradingAPI:
+    """Each trading API consists of a single OMS and a single broker"""
     broker_title: str = None
     oms_title: str = None
     oms_domain: str = None
@@ -323,7 +296,51 @@ class TradingAPI:
         return f"{self.oms_title} - {self.broker_title}"
 
 
-class Trader(ABC):
+@dataclass
+class TraderCredentials:
+    """Holds the credentials of a single trader account"""
+    api: TradingAPI
+    username: str
+    # password is optional since some APIs work with long-lived tokens
+    password: str = None
+
+
+@dataclass
+class TraderIdentification:
+    """Holds the identification of a single trader account"""
+    dbid: int = None
+    first_name: str = None
+    last_name: str = None
+    """
+    display_name is used for logging purposes. If it is not set, username will be used.
+    """
+    display_name: str = None
+    bourse_code: str = None
+    oms_code: str = None
+
+    def __str__(self) -> str:
+        return self.display_name
+
+
+@dataclass
+class TraderRealtimeData:
+    """
+    Contains the realtime data for a single trader account.
+    This data is mostly pushed through subscriptions to websockets.
+    """
+    portfolio: Portfolio
+    _orders: list[Order]
+    _orders_lock: threading.Lock
+    _subscribed_instruments: list[instrument.Instrument]
+
+    def __init__(self):
+        self.portfolio: Portfolio = Portfolio()
+        self._orders: list[Order] = []
+        self._orders_lock: threading.Lock = threading.Lock()
+        self._subscribed_instruments: list[instrument.Instrument] = []
+
+
+class Trader(ABC, TraderRealtimeData):
     """
     Trader class holds the data for a single trader account \
     and can be inheridated by classes specialized in training \
@@ -332,18 +349,14 @@ class Trader(ABC):
 
     def __init__(
             self,
-            identification: TraderIdentification,
-            api: TradingAPI,
+            credentials: TraderCredentials,
             logger_name: str = None
     ):
-        self.identification = identification
-        self.api = api
-        self.logger = logging.getLogger(logger_name)
+        self.credentials: TraderCredentials = credentials
+        self.identification: TraderIdentification = TraderIdentification()
+        self.logger: logging.Logger = logging.getLogger(logger_name)
         self.connection_state: TraderConnectionState = TraderConnectionState.NO_LOGIN
-        self.portfolio = Portfolio()
-        self._orders: list[Order] = []
-        self._orders_lock = threading.Lock()
-        self._subscribed_instruments: list[instrument.Instrument] = []
+        TraderRealtimeData.__init__(self=self)
 
     async def __aenter__(self):
         return self
@@ -354,10 +367,13 @@ class Trader(ABC):
         except Exception as ex:
             self.logger.error("Disconnect failed while disposing object.")
             self.logger.debug(
-                "Encountered {0} when trying to disconnect.".format(ex))
+                "Encountered %s when trying to disconnect.",
+                ex
+            )
 
     def __str__(self) -> str:
-        return f"{str(self.identification)}@{self.api.broker_title}"
+        name = self.identification.display_name if self.identification.display_name else self.credentials.username
+        return f"{str(self.identification)}@{self.credentials.api.broker_title}"
 
     def get_order(self, oms_id) -> Order:
         with self._orders_lock:

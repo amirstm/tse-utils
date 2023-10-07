@@ -20,7 +20,6 @@ class InstrumentIdentification:
     """
     Holds the identification for instruments.
     """
-    # pylint: disable=invalid-name
     isin: str = None
     tsetmc_code: str = None
     ticker: str = None
