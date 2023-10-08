@@ -1,3 +1,4 @@
+"""Building the library"""
 import setuptools
 
 setuptools.setup(
