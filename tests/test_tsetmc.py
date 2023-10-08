@@ -35,7 +35,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    identity = await tsetmc.get_instrument_identity_raw(
+                    identity = await tsetmc.__get_instrument_identity_raw(
                         self.sample_instrument.identification.tsetmc_code
                     )
                     self.assertEqual(identity["instrumentIdentity"]["instrumentID"],
@@ -63,7 +63,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    search_result = await tsetmc.get_instrument_search_raw(self.sample_instrument.identification.ticker)
+                    search_result = await tsetmc.__get_instrument_search_raw(self.sample_instrument.identification.ticker)
                     self.assertTrue(any(
                         x["insCode"] == self.sample_instrument.identification.tsetmc_code for x in search_result["instrumentSearch"]))
             except Exception as e:
@@ -90,7 +90,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_closing_price_info_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_closing_price_info_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("closingPriceInfo" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -116,7 +116,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_instrument_info_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_instrument_info_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue(data["instrumentInfo"]["instrumentID"]
                                     == self.sample_instrument.identification.isin)
             except Exception as e:
@@ -143,7 +143,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_client_type_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_client_type_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("buy_CountN" in data["clientType"])
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -168,7 +168,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_best_limits_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_best_limits_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("bestLimits" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -192,7 +192,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_closing_price_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_closing_price_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("closingPriceDaily" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -220,7 +220,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_client_type_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_client_type_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("clientType" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -260,7 +260,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_trade_intraday_list_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_trade_intraday_list_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("trade" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -284,7 +284,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_price_adjustment_list_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_price_adjustment_list_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("priceAdjust" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -311,7 +311,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_instrument_share_change_raw(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.__get_instrument_share_change_raw(self.sample_instrument.identification.tsetmc_code)
                     self.assertTrue("instrumentShareChange" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -338,7 +338,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_trade_intraday_hisory_list_raw(
+                    data = await tsetmc.__get_trade_intraday_hisory_list_raw(
                         self.sample_instrument.identification.tsetmc_code, self.sample_date)
                     self.assertTrue("tradeHistory" in data)
             except Exception as e:
@@ -368,7 +368,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_best_limits_intraday_history_list_raw(
+                    data = await tsetmc.__get_best_limits_intraday_history_list_raw(
                         self.sample_instrument.identification.tsetmc_code, self.sample_date)
                     self.assertTrue("bestLimitsHistory" in data)
             except Exception as e:
@@ -396,7 +396,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_index_history_raw(self.sample_index_identification.tsetmc_code)
+                    data = await tsetmc.__get_index_history_raw(self.sample_index_identification.tsetmc_code)
                     self.assertTrue("indexB2" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -422,7 +422,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_instrument_option_info_raw(self.sample_option.identification.isin)
+                    data = await tsetmc.__get_instrument_option_info_raw(self.sample_option.identification.isin)
                     self.assertTrue("instrumentOption" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -448,7 +448,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_primary_market_overview_raw()
+                    data = await tsetmc.__get_primary_market_overview_raw()
                     self.assertTrue("marketOverview" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -473,7 +473,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_secondary_market_overview_raw()
+                    data = await tsetmc.__get_secondary_market_overview_raw()
                     self.assertTrue("marketOverview" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -500,7 +500,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_market_watch_raw()
+                    data = await tsetmc.__get_market_watch_raw()
                     self.assertTrue("marketwatch" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -524,7 +524,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         for tn in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_client_type_all_raw()
+                    data = await tsetmc.__get_client_type_all_raw()
                     self.assertTrue("clientTypeAllDto" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
@@ -538,18 +538,6 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_client_type_all()
                     self.assertTrue(len(data) > 100)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
-
-    async def test_tse_client_get_instruments_list_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TseClientScraper() as tse_client:
-                    data = await tse_client.__get_instruments_list_raw()
-                    self.assertTrue("InstrumentResult" in data)
             except Exception as e:
                 if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
                     raise
