@@ -29,7 +29,7 @@ class TestModels(unittest.TestCase):
                 tsetmc_code="34929123529054163"
             )
         )
-        self.assertTrue(sample_option.exercise_price == 1653)
+        self.assertTrue(sample_option.exercise_price == 1819)
         self.assertTrue(
             sample_option.underlying.identification.isin == "IRO1FOLD0001"
         )
