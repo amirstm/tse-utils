@@ -439,7 +439,7 @@ class TsetmcScraper():
         """Get raw instrument historical intraday order book"""
         req = await self.__client.get(
             f"api/BestLimits/{tsetmc_code}/{query_date.year}\
-                {query_date.month:02}{query_date.day:02}",
+{query_date.month:02}{query_date.day:02}",
             timeout=timeout
         )
         if req.status_code != 200:

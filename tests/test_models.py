@@ -1,29 +1,41 @@
+"""Test the models in tse_utils library"""
 import unittest
 from datetime import datetime, date
 from tse_utils.models import trader, instrument, realtime, enums
 
 
 class TestModels(unittest.TestCase):
+    """Test the models in tse_utils library"""
 
     def __init__(self, *args, **kwargs):
         self.sample_instrument = instrument.Instrument(
-            instrument.InstrumentIdentification(isin="IRO1FOLD0001", tsetmc_code="46348559193224090",
-                                                ticker="فولاد"))
+            instrument.InstrumentIdentification(
+                isin="IRO1FOLD0001",
+                tsetmc_code="46348559193224090",
+                ticker="فولاد"
+            ))
         self.sample_date = date(year=2023, month=4, day=30)
         super().__init__(*args, **kwargs)
 
     def test_initiate_option_instrument(self):
+        """Test initiation of an option instrument"""
         sample_option = instrument.OptionInstrument(
             exercise_date=date(year=2023, month=10, day=18),
-            exercise_price=1653,
+            exercise_price=1819,
             underlying=self.sample_instrument,
             identification=instrument.InstrumentIdentification(
-                isin="IRO9FOLD6821",
-                ticker="ضفلا7020",
-                tsetmc_code="37762443198265540")
+                isin="IRO9FOLD6831",
+                ticker="ضفلا7021",
+                tsetmc_code="34929123529054163"
+            )
+        )
+        self.assertTrue(sample_option.exercise_price == 1653)
+        self.assertTrue(
+            sample_option.underlying.identification.isin == "IRO1FOLD0001"
         )
 
     def test_portfolio_asset_dynamics(self):
+        """Test dynamics of portfolio assets"""
         portfolio = trader.Portfolio()
         portfolio.update_asset(
             trader.PortfolioSecurity(
@@ -60,6 +72,7 @@ class TestModels(unittest.TestCase):
             self.sample_instrument.identification.isin) is None)
 
     def test_portfolio_position_dynamics(self):
+        """Test dynamics of portfolio positions"""
         portfolio = trader.Portfolio()
         portfolio.update_position(
             trader.PortfolioSecurity(
@@ -97,6 +110,7 @@ class TestModels(unittest.TestCase):
             self.sample_instrument.identification.isin) is None)
 
     def test_deep_order_book_dynamics(self):
+        """Test dynamics of deep order books"""
         deep_order_book = realtime.DeepOrderBook()
         # Initiation
         deep_order_book.update_buy_row(2, 200, 950)
@@ -135,14 +149,21 @@ class TestModels(unittest.TestCase):
         self.assertFalse(sell_rows)
 
     def test_trader_order_dynamics(self):
+        """Test dynamics of orders"""
         class ImplementedTrader(trader.Trader):
+            """A sample from abstract trader class"""
+
             def __init__(self, *args, **kwargs):
                 super().__init__(*args, **kwargs)
 
             async def connect(self) -> None:
                 pass
 
-            async def connect_looper(self, interval: int = 3, max_trial=10) -> None:
+            async def connect_looper(
+                    self,
+                    interval: int = 3,
+                    max_trial=10
+            ) -> None:
                 pass
 
             async def disconnect(self) -> None:
@@ -154,11 +175,13 @@ class TestModels(unittest.TestCase):
             async def pull_trader_data(self):
                 pass
 
-            async def subscribe_instruments_list(self, instruments: list[instrument.Instrument]):
+            async def subscribe_instruments_list(
+                    self,
+                    instruments: list[instrument.Instrument]
+            ):
                 pass
 
-            async def order_send(self, side: enums.TradeSide, isin: str, quantity: int, price: int, client_id: str = None,
-                                 validity: enums.OrderValidityType = enums.OrderValidityType.DAY, expiration_date: date = None):
+            async def order_send(self, order: trader.Order):
                 pass
 
             async def order_cancel(self, order: trader.Order):
@@ -175,13 +198,33 @@ class TestModels(unittest.TestCase):
         )
         # Initiation
         sample_trader.add_order(trader.Order(
-            oms_id=1, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=10, price=5))
+            oms_id=1,
+            isin=self.sample_instrument.identification.isin,
+            side=enums.TradeSide.BUY,
+            quantity=10,
+            price=5
+        ))
         sample_trader.add_order(trader.Order(
-            oms_id=2, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.SELL, quantity=20, price=30))
+            oms_id=2,
+            isin=self.sample_instrument.identification.isin,
+            side=enums.TradeSide.SELL,
+            quantity=20,
+            price=30
+        ))
         sample_trader.add_order(trader.Order(
-            oms_id=3, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=30, price=20))
+            oms_id=3,
+            isin=self.sample_instrument.identification.isin,
+            side=enums.TradeSide.BUY,
+            quantity=30,
+            price=20
+        ))
         sample_trader.add_order(trader.Order(
-            oms_id=4, isin=self.sample_instrument.identification.isin, side=enums.TradeSide.BUY, quantity=40, price=20))
+            oms_id=4,
+            isin=self.sample_instrument.identification.isin,
+            side=enums.TradeSide.BUY,
+            quantity=40,
+            price=20
+        ))
         self.assertTrue(sample_trader.get_order(1).quantity == 10)
         self.assertTrue(sample_trader.get_order(4).quantity == 40)
         self.assertTrue(sample_trader.get_order_custom(

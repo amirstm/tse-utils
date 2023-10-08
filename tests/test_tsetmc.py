@@ -1,3 +1,4 @@
+"""Test tsetmc and tse_client modules in tse_utils library"""
 import unittest
 from datetime import datetime, date, time
 from time import sleep
@@ -8,6 +9,7 @@ from tse_utils.models import instrument
 
 
 class TestTSETMC(unittest.IsolatedAsyncioTestCase):
+    """Test tsetmc and tse_client modules in tse_utils library"""
     retries_on_timeout = 5
 
     def __init__(self, *args, **kwargs):
@@ -31,208 +33,127 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
         )
         super().__init__(*args, **kwargs)
 
-    async def test_get_instrument_identity_raw(self):
-        for tn in range(self.retries_on_timeout):
+    async def test_get_instrument_identity(self):
+        """Test instrument identity fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    identity = await tsetmc.__get_instrument_identity_raw(
+                    identity = await tsetmc.get_instrument_identity(
                         self.sample_instrument.identification.tsetmc_code
                     )
-                    self.assertEqual(identity["instrumentIdentity"]["instrumentID"],
-                                     self.sample_instrument.identification.isin)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
-
-    async def test_get_instrument_identity(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    identity = await tsetmc.get_instrument_identity(self.sample_instrument.identification.tsetmc_code)
                     self.assertEqual(
                         identity.isin, self.sample_instrument.identification.isin)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
-
-    async def test_get_instrument_search_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    search_result = await tsetmc.__get_instrument_search_raw(self.sample_instrument.identification.ticker)
-                    self.assertTrue(any(
-                        x["insCode"] == self.sample_instrument.identification.tsetmc_code for x in search_result["instrumentSearch"]))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+            except httpx.ConnectTimeout as exc:
+                if trial_ind == self.retries_on_timeout - 1:
+                    raise exc
+                sleep(1)
 
     async def test_get_instrument_search(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument search on TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    search_result = await tsetmc.get_instrument_search(self.sample_instrument.identification.ticker)
+                    search_result = await tsetmc.get_instrument_search(
+                        self.sample_instrument.identification.ticker
+                    )
                     self.assertTrue(any(
-                        x.tsetmc_code == self.sample_instrument.identification.tsetmc_code for x in search_result
+                        x.tsetmc_code == self.sample_instrument.identification.tsetmc_code
+                        for x in search_result
                     ))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
-
-    async def test_get_closing_price_info_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_closing_price_info_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("closingPriceInfo" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+            except httpx.ConnectTimeout as exc:
+                if trial_ind == self.retries_on_timeout - 1:
+                    raise exc
+                sleep(1)
 
     async def test_get_closing_price_info(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument current trade data fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_closing_price_info(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_closing_price_info(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(not data.last_trade_datetime is None)
                     self.assertTrue(data.min_price *
                                     data.trade_volume <= data.trade_value)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_instrument_info_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_instrument_info_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue(data["instrumentInfo"]["instrumentID"]
-                                    == self.sample_instrument.identification.isin)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_instrument_info(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument home page data fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_instrument_info(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_instrument_info(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(
                         data.isin == self.sample_instrument.identification.isin)
                     self.assertTrue(data.total_shares == 800000000000)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_client_type_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_client_type_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("buy_CountN" in data["clientType"])
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_client_type(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument current client type fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_client_type(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue(data.legal.sell.volume + data.natural.sell.volume ==
-                                    data.legal.buy.volume + data.natural.buy.volume)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+                    data = await tsetmc.get_client_type(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
+                    self.assertTrue(
+                        data.legal.sell.volume + data.natural.sell.volume ==
+                        data.legal.buy.volume + data.natural.buy.volume
+                    )
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_best_limits_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_best_limits_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("bestLimits" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_best_limits(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument current order book fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_best_limits(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_best_limits(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(len(data.rows) == 5)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_closing_price_daily_list_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_closing_price_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("closingPriceDaily" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_closing_price_daily_list(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument historical daily prices fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_closing_price_daily_list(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_closing_price_daily_list(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(len(data) > 1000)
                     chosen_date = datetime(year=2023, month=9, day=11)
                     date_data = next(
                         x for x in data if x.last_trade_datetime.date() == chosen_date.date())
                     self.assertTrue(date_data.trade_volume == 74309985)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_client_type_history_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_client_type_daily_list_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("clientType" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_client_type_history(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument historical daily client type fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_client_type_daily_list(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_client_type_daily_list(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     chosen_date = date(year=2023, month=9, day=11)
                     date_data = next(
                         x for x in data if x.record_date == chosen_date)
@@ -250,105 +171,65 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(
                         date_data.natural.sell.value == 219633070590)
                     self.assertTrue(date_data.natural.sell.volume == 39582770)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_trade_intraday_list_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_trade_intraday_list_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("trade" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_trade_intraday_list(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument intradary microtrades fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_trade_intraday_list(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_trade_intraday_list(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(len(data) != 0)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_price_adjustment_list_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_price_adjustment_list_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("priceAdjust" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_price_adjustment_list(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument historical price adjustments fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_price_adjustment_list(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_price_adjustment_list(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(len(data) > 10)
                     self.assertTrue(any(x.date == date(year=2023, month=7, day=22)
                                         and x.price_before == 5460
                                         and x.price_after == 4960 for x in data))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_instrument_share_change_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_instrument_share_change_raw(self.sample_instrument.identification.tsetmc_code)
-                    self.assertTrue("instrumentShareChange" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_instrument_share_change(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument historical equity change fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_instrument_share_change(self.sample_instrument.identification.tsetmc_code)
+                    data = await tsetmc.get_instrument_share_change(
+                        self.sample_instrument.identification.tsetmc_code
+                    )
                     self.assertTrue(len(data) > 5)
-                    self.assertTrue(any(x.record_date == date(year=2022, month=8, day=9)
-                                        and x.total_shares_before == 293000000000
-                                        and x.total_shares_after == 530000000000 for x in data))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+                    self.assertTrue(any(
+                        x.record_date == date(year=2022, month=8, day=9)
+                        and x.total_shares_before == 293000000000
+                        and x.total_shares_after == 530000000000
+                        for x in data
+                    ))
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_trade_intraday_hisory_list_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_trade_intraday_hisory_list_raw(
-                        self.sample_instrument.identification.tsetmc_code, self.sample_date)
-                    self.assertTrue("tradeHistory" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_trade_intraday_hisory_list(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument historical intraday microtrades fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_trade_intraday_hisory_list(
@@ -358,131 +239,89 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                                     and chosen_data.price == 7250
                                     and chosen_data.time == time(hour=12, minute=26, second=6)
                                     and chosen_data.is_canceled)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_best_limits_intraday_history_list_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_best_limits_intraday_history_list_raw(
-                        self.sample_instrument.identification.tsetmc_code, self.sample_date)
-                    self.assertTrue("bestLimitsHistory" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_best_limits_intraday_history_list(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument historical orderbook fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_best_limits_intraday_history_list(
-                        self.sample_instrument.identification.tsetmc_code, self.sample_date)
-                    self.assertTrue(any(x.record_time == time(hour=8, minute=45, second=36) and
-                                        x.row_number == 5 and x.reference_id == 11679170214 and
-                                        x.demand.volume == 163213 and x.demand.price == 7000 for x in data))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+                        self.sample_instrument.identification.tsetmc_code, self.sample_date
+                    )
+                    self.assertTrue(
+                        any(x.record_time == time(hour=8, minute=45, second=36) and
+                            x.row_number == 5 and x.reference_id == 11679170214 and
+                            x.demand.volume == 163213 and x.demand.price == 7000
+                            for x in data
+                            )
+                    )
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_index_history_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_index_history_raw(self.sample_index_identification.tsetmc_code)
-                    self.assertTrue("indexB2" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_index_history(self):
-        for tn in range(self.retries_on_timeout):
+        """Test historical index data fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_index_history(self.sample_index_identification.tsetmc_code)
-                    self.assertTrue(any(x.record_date == date(year=2023, month=9, day=13) and
-                                        x.last_value == 2126741.7 and x.min_value == 2126690 and
-                                        x.max_value == 2130510 for x in data))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+                    data = await tsetmc.get_index_history(
+                        self.sample_index_identification.tsetmc_code
+                    )
+                    self.assertTrue(
+                        any(
+                            x.record_date == date(year=2023, month=9, day=13) and
+                            x.last_value == 2126741.7 and x.min_value == 2126690 and
+                            x.max_value == 2130510
+                            for x in data
+                        )
+                    )
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_instrument_option_info_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_instrument_option_info_raw(self.sample_option.identification.isin)
-                    self.assertTrue("instrumentOption" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_instrument_option_info(self):
-        for tn in range(self.retries_on_timeout):
+        """Test instrument option info fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.get_instrument_option_info(self.sample_option.identification.isin)
-                    self.assertTrue(data.exercise_date == self.sample_option.exercise_date and
-                                    data.exercise_price == self.sample_option.exercise_price and
-                                    data.underlying_tsetmc_code == self.sample_instrument.identification.tsetmc_code)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+                    data = await tsetmc.get_instrument_option_info(
+                        self.sample_option.identification.isin
+                    )
+                    self.assertTrue(
+                        data.exercise_date ==
+                        self.sample_option.exercise_date and
+                        data.exercise_price ==
+                        self.sample_option.exercise_price and
+                        data.underlying_tsetmc_code ==
+                        self.sample_instrument.identification.tsetmc_code
+                    )
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_primary_market_overview_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_primary_market_overview_raw()
-                    self.assertTrue("marketOverview" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_primary_market_overview(self):
-        for tn in range(self.retries_on_timeout):
+        """Test primary market overview fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_primary_market_overview()
                     self.assertTrue(data.market_value > 4e16)
                     self.assertTrue(data.overall_index.last_value > 1e6)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_secondary_market_overview_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_secondary_market_overview_raw()
-                    self.assertTrue("marketOverview" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_secondary_market_overview(self):
-        for tn in range(self.retries_on_timeout):
+        """Test secondary market overview fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_secondary_market_overview()
@@ -490,73 +329,53 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(
                         data.secondary_market_index.last_value > 1e4)
                     self.assertTrue(data.tertiary_market_value > 1e15)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_market_watch_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_market_watch_raw()
-                    self.assertTrue("marketwatch" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_market_watch(self):
-        for tn in range(self.retries_on_timeout):
+        """Test market watch fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_market_watch()
                     self.assertTrue(len(data) > 100)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
-
-    async def test_get_client_type_all_raw(self):
-        for tn in range(self.retries_on_timeout):
-            try:
-                async with TsetmcScraper() as tsetmc:
-                    data = await tsetmc.__get_client_type_all_raw()
-                    self.assertTrue("clientTypeAllDto" in data)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
-                    raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_get_client_type_all(self):
-        for tn in range(self.retries_on_timeout):
+        """Test market client type fetch from TSETMC"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_client_type_all()
                     self.assertTrue(len(data) > 100)
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
+                sleep(1)
 
     async def test_tse_client_get_instruments_list(self):
-        for tn in range(self.retries_on_timeout):
+        """Test fetch instruments list from TseClient"""
+        for trial_ind in range(self.retries_on_timeout):
             try:
                 async with TseClientScraper() as tse_client:
                     instruments, _ = await tse_client.get_instruments_list()
                     self.assertTrue(len(instruments) > 0)
-                    self.assertTrue(any(x.tsetmc_code == self.sample_instrument.identification.tsetmc_code and
-                                        x.isin == self.sample_instrument.identification.isin for x in instruments))
-            except Exception as e:
-                if tn == self.retries_on_timeout - 1 or not isinstance(e, httpx.ConnectTimeout):
+                    self.assertTrue(
+                        any(
+                            x.tsetmc_code == self.sample_instrument.identification.tsetmc_code and
+                            x.isin == self.sample_instrument.identification.isin
+                            for x in instruments
+                        )
+                    )
+            except httpx.ConnectTimeout:
+                if trial_ind == self.retries_on_timeout - 1:
                     raise
-                else:
-                    sleep(1)
+                sleep(1)
 
 
 if __name__ == '__main__':

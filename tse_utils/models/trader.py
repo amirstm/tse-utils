@@ -366,12 +366,13 @@ class Trader(ABC, TraderRealtimeData):
             await self.disconnect()
         except Exception as ex:
             self.logger.error(
-                "Disconnect failed while disposing object."
+                "Disconnect failed on disposing object."
             )
             self.logger.debug(
                 "Encountered %s when trying to disconnect.",
                 ex
             )
+            raise ex
 
     def __str__(self) -> str:
         name = self.identification.display_name \
