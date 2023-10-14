@@ -63,7 +63,10 @@ xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
     async def get_instruments_list(
             self,
             timeout: int = 3
-    ) -> list[TseClientInstrumentIdentitification]:
+    ) -> tuple[
+        list[TseClientInstrumentIdentitification],
+        list[TseClientInstrumentIdentitification]
+    ]:
         """Get and process instruments list"""
         raw = await self.__get_instruments_list_raw(timeout=timeout)
         element = BeautifulSoup(raw, features="xml").findChild(

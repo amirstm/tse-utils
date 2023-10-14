@@ -588,3 +588,18 @@ class TsetmcScrapeException(Exception):
     def __init__(self, *args, **kwargs):
         self.status_code = kwargs.get('status_code')
         super().__init__(*args)
+
+
+def ticker_with_tsetmc_homepage_link(
+    ticker: str,
+    tsetmc_code: str
+):
+    """
+    Returns a HTML element that contains the link to instrument TSETMC homepage
+    """
+    # pylint: disable = consider-using-f-string
+    # Not using f-strings because the VS code autoformatter adds spaces
+    return "<a href=\"http://www.tsetmc.com/instInfo/{}\">{}</a>".format(
+        tsetmc_code,
+        ticker
+    )
