@@ -349,12 +349,12 @@ class IndexDaily:
     record_date: date = None
     min_value: float = None
     max_value: float = None
-    last_value: float = None
+    close_value: float = None
 
     def __init__(self, tsetmc_raw_data):
         self.min_value = tsetmc_raw_data["xNivInuPbMresIbs"]
         self.max_value = tsetmc_raw_data["xNivInuPhMresIbs"]
-        self.last_value = tsetmc_raw_data["xNivInuClMresIbs"]
+        self.close_value = tsetmc_raw_data["xNivInuClMresIbs"]
         d_even = tsetmc_raw_data["dEven"]
         self.record_date = date(
             year=d_even // 10000,
@@ -408,7 +408,7 @@ class InstrumentOptionInfo(
 @dataclass
 class IndexValue:
     """Holds the last value of an index with its recent change"""
-    last_value: int
+    close_value: int
     change: int
 
 
@@ -432,11 +432,11 @@ class PrimaryMarketOverview(realtime.TradeQuantity):
             trade_volume=tsetmc_raw_data["marketActivityQTotTran"]
         )
         self.overall_index = IndexValue(
-            last_value=tsetmc_raw_data["indexLastValue"],
+            close_value=tsetmc_raw_data["indexLastValue"],
             change=tsetmc_raw_data["indexChange"]
         )
         self.equal_weighted_index = IndexValue(
-            last_value=tsetmc_raw_data["indexEqualWeightedLastValue"],
+            close_value=tsetmc_raw_data["indexEqualWeightedLastValue"],
             change=tsetmc_raw_data["indexEqualWeightedChange"]
         )
         market_activity_deven = tsetmc_raw_data["marketActivityDEven"]
@@ -471,7 +471,7 @@ class SecondaryMarketOverview(realtime.TradeQuantity):
             trade_volume=tsetmc_raw_data["marketActivityQTotTran"]
         )
         self.secondary_market_index = IndexValue(
-            last_value=tsetmc_raw_data["indexLastValue"],
+            close_value=tsetmc_raw_data["indexLastValue"],
             change=tsetmc_raw_data["indexChange"]
         )
         market_activity_deven = tsetmc_raw_data["marketActivityDEven"]

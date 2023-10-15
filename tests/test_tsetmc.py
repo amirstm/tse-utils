@@ -275,7 +275,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                     self.assertTrue(
                         any(
                             x.record_date == date(year=2023, month=9, day=13) and
-                            x.last_value == 2126741.7 and x.min_value == 2126690 and
+                            x.close_value == 2126741.7 and x.min_value == 2126690 and
                             x.max_value == 2130510
                             for x in data
                         )
@@ -313,7 +313,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                 async with TsetmcScraper() as tsetmc:
                     data = await tsetmc.get_primary_market_overview()
                     self.assertTrue(data.market_value > 4e16)
-                    self.assertTrue(data.overall_index.last_value > 1e6)
+                    self.assertTrue(data.overall_index.close_value > 1e6)
             except httpx.ConnectTimeout:
                 if trial_ind == self.retries_on_timeout - 1:
                     raise
@@ -327,7 +327,7 @@ class TestTSETMC(unittest.IsolatedAsyncioTestCase):
                     data = await tsetmc.get_secondary_market_overview()
                     self.assertTrue(data.market_value > 1e16)
                     self.assertTrue(
-                        data.secondary_market_index.last_value > 1e4)
+                        data.secondary_market_index.close_value > 1e4)
                     self.assertTrue(data.tertiary_market_value > 1e15)
             except httpx.ConnectTimeout:
                 if trial_ind == self.retries_on_timeout - 1:
