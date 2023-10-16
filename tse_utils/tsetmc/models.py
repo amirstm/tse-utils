@@ -27,10 +27,10 @@ class InstrumentIdentification(instrument.InstrumentIdentification):
         )
         self.sector_title = tsetmc_raw_data["sector"]["lSecVal"]
         if "subSector" in tsetmc_raw_data:
-            self.sub_sector_code = tsetmc_raw_data["subSector"]["cSoSecVal"]
-            self.sub_sector_title = int(
-                tsetmc_raw_data["subSector"]["lSoSecVal"]
+            self.sub_sector_code = int(
+                tsetmc_raw_data["subSector"]["cSoSecVal"]
             )
+            self.sub_sector_title = tsetmc_raw_data["subSector"]["lSoSecVal"]
         self.type_id = int(tsetmc_raw_data["yVal"])
         instrument.InstrumentIdentification.__init__(
             self=self,
