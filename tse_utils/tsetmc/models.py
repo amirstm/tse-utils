@@ -21,14 +21,16 @@ class InstrumentIdentification(instrument.InstrumentIdentification):
 
     def __init__(self, tsetmc_code: str, tsetmc_raw_data: dict):
         self.market_title = tsetmc_raw_data["cgrValCotTitle"]
-        self.market_code = tsetmc_raw_data["cComVal"]
+        self.market_code = int(tsetmc_raw_data["cComVal"])
         self.sector_code = int(
             tsetmc_raw_data["sector"]["cSecVal"].replace(" ", "")
         )
         self.sector_title = tsetmc_raw_data["sector"]["lSecVal"]
         if "subSector" in tsetmc_raw_data:
             self.sub_sector_code = tsetmc_raw_data["subSector"]["cSoSecVal"]
-            self.sub_sector_title = tsetmc_raw_data["subSector"]["lSoSecVal"]
+            self.sub_sector_title = int(
+                tsetmc_raw_data["subSector"]["lSoSecVal"]
+            )
         self.type_id = int(tsetmc_raw_data["yVal"])
         instrument.InstrumentIdentification.__init__(
             self=self,
