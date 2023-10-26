@@ -14,7 +14,7 @@ Install TSE-UTILS using pip:
 
    ```bash
    pip install tse-utils
-
+   ```
 ## Examples
 
 1. **Get Instruments**: Get the list of instruments and indices for TSE Client:
@@ -23,3 +23,4 @@ Install TSE-UTILS using pip:
     from tse_utils.tse_client import TseClientScraper
     async with TseClientScraper() as tse_client:
         instruments, indices = await tse_client.get_instruments_list()
+    ```
