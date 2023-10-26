@@ -21,6 +21,16 @@ Install TSE-UTILS using pip:
 
     ```bash
     from tse_utils.tse_client import TseClientScraper
+
     async with TseClientScraper() as tse_client:
         instruments, indices = await tse_client.get_instruments_list()
+    ```
+
+2. **Search for Instruments**: Search for instruments on TSETMC:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        search_result = await tsetmc.get_instrument_search(search_value="فولاد")
     ```
