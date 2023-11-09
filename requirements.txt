@@ -2,3 +2,4 @@ httpx==0.25.0
 beautifulsoup4==4.12.2
 lxml==4.9.3
 wheel==0.41.2
+setuptools==68.2.2
