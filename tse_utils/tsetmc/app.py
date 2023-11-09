@@ -582,14 +582,16 @@ class TsetmcScraper():
 
     async def __get_market_watch_raw(
             self,
+            ref_id: int = 0,
+            h_even: int = 0,
             timeout: int = 3
     ) -> dict:
         """Get raw market watch page"""
         req = await self.__client.get(
-            "api/ClosingPrice/GetMarketWatch?market=0&paperTypes[0]=1&paperTypes[1]=2\
+            f"api/ClosingPrice/GetMarketWatch?market=0&paperTypes[0]=1&paperTypes[1]=2\
                 &paperTypes[2]=3&paperTypes[3]=4&paperTypes[4]=5&paperTypes[5]=6\
                     &paperTypes[6]=7&paperTypes[7]=8&paperTypes[8]=9&showTraded=false\
-                        &withBestLimits=true&hEven=0&RefID=0",
+                        &withBestLimits=true&hEven={h_even}&RefID={ref_id}",
             timeout=timeout
         )
         if req.status_code != 200:
@@ -601,10 +603,14 @@ class TsetmcScraper():
 
     async def get_market_watch(
             self,
+            ref_id: int = 0,
+            h_even: int = 0,
             timeout: int = 3
     ) -> list[MarketWatchTradeData]:
         """Get and process market watch page"""
         raw = await self.__get_market_watch_raw(
+            ref_id=ref_id,
+            h_even=h_even,
             timeout=timeout
         )
         return [
