@@ -75,6 +75,13 @@ class ClientTypeTradeQuantity:
     # In many cases the value parameter is not valued
     value: int = None
 
+    def __eq__(self, __value: object) -> bool:
+        return (
+            isinstance(__value, ClientTypeTradeQuantity) and
+            __value.num == self.num and
+            __value.volume == self.volume
+        )
+
 
 @dataclass
 class ClientTypeTrade:
@@ -89,6 +96,13 @@ class ClientTypeTrade:
     ):
         self.buy = buy if buy else ClientTypeTradeQuantity()
         self.sell = sell if sell else ClientTypeTradeQuantity()
+
+    def __eq__(self, __value: object) -> bool:
+        return (
+            isinstance(__value, ClientTypeTrade) and
+            __value.buy == self.buy and
+            __value.sell == self.sell
+        )
 
 
 @dataclass
@@ -111,6 +125,13 @@ class ClientType:
     def trade_volume(self) -> int:
         """returns total trade volume"""
         return self.legal.buy.volume + self.natural.buy.volume
+
+    def __eq__(self, __value: object) -> bool:
+        return (
+            isinstance(__value, ClientType) and
+            __value.legal == self.legal and
+            __value.natural == self.natural
+        )
 
 
 @dataclass
