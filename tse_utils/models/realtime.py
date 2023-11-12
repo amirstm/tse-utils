@@ -18,6 +18,14 @@ class OrderBookRowSide:
     def __str__(self) -> str:
         return f"{self.volume} @ {self.price}"
 
+    def __eq__(self, __value: object) -> bool:
+        return (
+            isinstance(__value, OrderBookRowSide) and
+            __value.num == self.num and
+            __value.volume == self.volume and
+            __value.price == self.price
+        )
+
 
 @dataclass
 class OrderBookRow():
@@ -38,6 +46,13 @@ class OrderBookRow():
     def __str__(self):
         return f"{self.supply.num} {self.supply.volume} {self.supply.price} | \
             {self.demand.price} {self.demand.volume} {self.demand.num}"
+
+    def __eq__(self, __value: object) -> bool:
+        return (
+            isinstance(__value, OrderBookRow) and
+            __value.demand == self.demand and
+            __value.supply == self.supply
+        )
 
 
 @dataclass
