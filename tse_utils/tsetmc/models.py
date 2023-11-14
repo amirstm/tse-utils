@@ -498,14 +498,14 @@ class MarketWatchBestLimitsRow(realtime.OrderBookRow):
         realtime.OrderBookRow.__init__(
             self=self,
             demand=realtime.OrderBookRowSide(
-                num=tsetmc_raw_data["zmd"],
-                volume=tsetmc_raw_data["qmd"],
-                price=tsetmc_raw_data["pmd"]
+                num=int(tsetmc_raw_data["zmd"]),
+                volume=int(tsetmc_raw_data["qmd"]),
+                price=int(tsetmc_raw_data["pmd"])
             ),
             supply=realtime.OrderBookRowSide(
-                num=tsetmc_raw_data["zmo"],
-                volume=tsetmc_raw_data["qmo"],
-                price=tsetmc_raw_data["pmo"]
+                num=int(tsetmc_raw_data["zmo"]),
+                volume=int(tsetmc_raw_data["qmo"]),
+                price=int(tsetmc_raw_data["pmo"])
             )
         )
         self.row_id = tsetmc_raw_data["rid"]
@@ -535,12 +535,12 @@ class MarketWatchTradeData(
     def __init__(self, tsetmc_raw_data):
         realtime.BigQuantityParams.__init__(
             self=self,
-            total_shares=tsetmc_raw_data["ztd"],
-            base_volume=tsetmc_raw_data["bv"]
+            total_shares=int(tsetmc_raw_data["ztd"]),
+            base_volume=int(tsetmc_raw_data["bv"])
         )
         self.price_thresholds = realtime.PriceRange(
-            max_price=tsetmc_raw_data["pMax"],
-            min_price=tsetmc_raw_data["pMin"]
+            max_price=int(tsetmc_raw_data["pMax"]),
+            min_price=int(tsetmc_raw_data["pMin"])
         )
         self.identification = instrument.InstrumentIdentification(
             tsetmc_code=tsetmc_raw_data["insCode"],
@@ -549,15 +549,15 @@ class MarketWatchTradeData(
             name_persian=tsetmc_raw_data["lvc"]
         )
         self.intraday_trade_candle = realtime.TradeCandle(
-            previous_price=tsetmc_raw_data["py"],
-            last_price=tsetmc_raw_data["pdv"],
-            open_price=tsetmc_raw_data["pf"],
-            close_price=tsetmc_raw_data["pcl"],
-            max_price=tsetmc_raw_data["pmx"],
-            min_price=tsetmc_raw_data["pmn"],
-            trade_value=tsetmc_raw_data["qtc"],
-            trade_volume=tsetmc_raw_data["qtj"],
-            trade_num=tsetmc_raw_data["ztt"]
+            previous_price=int(tsetmc_raw_data["py"]),
+            last_price=int(tsetmc_raw_data["pdv"]),
+            open_price=int(tsetmc_raw_data["pf"]),
+            close_price=int(tsetmc_raw_data["pcl"]),
+            max_price=int(tsetmc_raw_data["pmx"]),
+            min_price=int(tsetmc_raw_data["pmn"]),
+            trade_value=int(tsetmc_raw_data["qtc"]),
+            trade_volume=int(tsetmc_raw_data["qtj"]),
+            trade_num=int(tsetmc_raw_data["ztt"])
         )
         self.eps = tsetmc_raw_data["eps"]
         h_even = tsetmc_raw_data["hEven"]
