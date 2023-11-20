@@ -41,7 +41,7 @@ class TsetmcScraper():
                 AppleWebKit/537.36 (KHTML, like Gecko) \
                 Chrome/89.0.4389.114 Safari/537.36",
             "accept": "application/json, text/plain, */*"
-        }, base_url=f"http://{tsetmc_domain}/")
+        }, base_url=f"https://{tsetmc_domain}/")
 
     async def __aenter__(self):
         return self
