@@ -62,7 +62,7 @@ class OrderBook():
     """
 
     def __init__(self, row_count: int = 5):
-        self.rows = [OrderBookRow() for i in range(row_count)]
+        self.rows: list[OrderBookRow] = [OrderBookRow() for i in range(row_count)]
 
     # def get_diff(self): TODO: get difference with order
 
