@@ -34,3 +34,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         search_result = await tsetmc.get_instrument_search(search_value="فولاد")
     ```
+
+3. **Get Instrument Identity**: Get an instrument's identity using its tsetmc code:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        identity = await tsetmc.get_instrument_identity(tsetmc_code="46348559193224090")
+    ```
