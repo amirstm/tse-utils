@@ -43,3 +43,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         identity = await tsetmc.get_instrument_identity(tsetmc_code="46348559193224090")
     ```
+
+4. **Get Current Instrument Stats**: Get an instrument's current stats, including prices and volumes:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        identity = await tsetmc.get_closing_price_info(tsetmc_code="46348559193224090")
+    ```
