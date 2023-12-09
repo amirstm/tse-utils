@@ -61,3 +61,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         homepage_data = await tsetmc.get_instrument_info(tsetmc_code="46348559193224090")
     ```
+
+6. **Get Instrument Client Type Data**: Get an instrument's client type data, consisting of trade shares for real and legal entities:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        client_type_data = await tsetmc.get_client_type(tsetmc_code="46348559193224090")
+    ```
