@@ -70,3 +70,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         client_type_data = await tsetmc.get_client_type(tsetmc_code="46348559193224090")
     ```
+
+7. **Get Instrument Orderbook**: Get an instrument's latest orderbook:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        orderbook = await tsetmc.get_best_limits(tsetmc_code="46348559193224090")
+    ```
