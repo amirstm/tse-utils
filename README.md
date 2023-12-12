@@ -79,3 +79,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         orderbook = await tsetmc.get_best_limits(tsetmc_code="46348559193224090")
     ```
+
+8. **Get Historical Daily Prices**: Get an instrument's historical daily prices:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        historical = await tsetmc.get_closing_price_daily_list(tsetmc_code="46348559193224090")
+    ```
