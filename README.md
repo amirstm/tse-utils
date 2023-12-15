@@ -88,3 +88,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         historical = await tsetmc.get_closing_price_daily_list(tsetmc_code="46348559193224090")
     ```
+
+9. **Get Historical Daily Client Type Data**: Get an instrument's historical client type data:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        historical = await tsetmc.get_client_type_daily_list(tsetmc_code="46348559193224090")
+    ```
