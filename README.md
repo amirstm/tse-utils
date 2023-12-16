@@ -97,3 +97,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         historical = await tsetmc.get_client_type_daily_list(tsetmc_code="46348559193224090")
     ```
+
+10. **Get Current Intraday Tick Trades**: Get an instrument's tick trade data within the last trading day:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        tick_trades = await tsetmc.get_trade_intraday_list(tsetmc_code="46348559193224090")
+    ```
