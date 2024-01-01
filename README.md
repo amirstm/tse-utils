@@ -107,7 +107,7 @@ Install TSE-UTILS using pip:
         tick_trades = await tsetmc.get_trade_intraday_list(tsetmc_code="46348559193224090")
     ```
 
-11. **Get Current Intraday Tick Trades**: Get an instrument's price adjustments, which happen after dividends and capital raises:
+11. **Get Price Adjustments**: Get an instrument's price adjustments, which happen after dividends and capital raises:
 
     ```bash
     from tse_utils.tsetmc import TsetmcScraper
