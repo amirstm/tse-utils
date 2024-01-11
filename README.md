@@ -115,3 +115,12 @@ Install TSE-UTILS using pip:
     async with TsetmcScraper() as tsetmc:
         price_adjustments = await tsetmc.get_price_adjustment_list(tsetmc_code="46348559193224090")
     ```
+
+12. **Get Share Changes**: Get an instrument's share changes throughout history:
+
+    ```bash
+    from tse_utils.tsetmc import TsetmcScraper
+
+    async with TsetmcScraper() as tsetmc:
+        share_changes = await tsetmc.get_instrument_share_change(tsetmc_code="46348559193224090")
+    ```
