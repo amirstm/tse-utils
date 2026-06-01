@@ -298,6 +298,39 @@ class TsetmcScraper():
             for x in raw["clientType"]
         ][::-1]
 
+    async def __get_client_type_daily_list_raw(
+            self,
+            tsetmc_code: str,
+            query_date: date,
+            timeout: int = 3
+    ) -> dict:
+        """Get raw instrument daily historical client type data"""
+        req = await self.__client.get(
+            f"api/ClientType/GetClientTypeHistory/{tsetmc_code}/{query_date.year}{query_date.month:02}{query_date.day:02}",
+            timeout=timeout
+        )
+        if req.status_code != 200:
+            raise TsetmcScrapeException(
+                f"Bad response: [{req.status_code}]",
+                status_code=req.status_code
+            )
+        return json.loads(req.text)
+
+    async def get_client_type_daily_list(
+            self,
+            tsetmc_code: str,
+            query_date: date,
+            timeout: int = 3
+    ) -> ClientTypeDaily:
+        """Get and process instrument daily historical client type data"""
+        raw = await self.__get_client_type_daily_list_raw(
+            tsetmc_code=tsetmc_code,
+            query_date=query_date,
+            timeout=timeout
+        )
+        return ClientTypeDaily(tsetmc_raw_data=raw["clientType"])
+
+
     async def __get_trade_intraday_list_raw(
             self,
             tsetmc_code: str,
